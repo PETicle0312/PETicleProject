@@ -1,45 +1,38 @@
 package com.example.demo.user.entity;
 
-import com.example.demo.school.entity.School;
-
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
-@Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Table(name = "users") // 실제 DB 테이블명
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     @Column(nullable = false, unique = true)
-    private String phoneNumber;
+    private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(nullable = true)
+    private String phone;
 
-    private int totalLives;
+    // 생성자, getter/setter
+    public User() {}
 
-    private String characterName;
+    public User(String username, String password, String phone) {
+        this.username = username;
+        this.password = password;
+        this.phone = phone;
+    }
 
-    private String imageUrl;
+    public Long getId() { return id; }
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getPhone() { return phone; }
 
-    @ManyToOne
-    @JoinColumn(name = "school_id")
-    private School school;
-
-    @Column(name = "register_date")
-    private String registerDate;
-
-    @Column(name = "last_played")
-    private String lastPlayed;
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    public void setPhone(String phone) { this.phone = phone; }
 }
