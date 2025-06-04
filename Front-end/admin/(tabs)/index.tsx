@@ -9,7 +9,7 @@ import AdminDetailsScreen from '../admin/admin_details/[school]';
 const Stack = createStackNavigator();
 */
 
-export { default } from '../admin_phonenumber';
+export { default } from '../admin/admin_login';
 
 /*
 export default function TabIndex() {
