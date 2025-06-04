@@ -1,18 +1,25 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 // 아이콘 경로 맞게 수정!
 const arrowLeft = require('../../assets/images/arrow_left.png');
 
 export default function PasswordChangeScreen() {
+
+  const router = useRouter();
+  const onBack = () => {
+    router.back();
+  };
   return (
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
           <Image source={arrowLeft} style={styles.arrowIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>비밀번호 변경</Text>
+        <View style={{width: 40}} /> {/* 오른쪽 여백용 */}
       </View>
 
     {/* 내용 전체 래퍼 */}
@@ -64,7 +71,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F6F6',
-    paddingTop: 38,
+    paddingTop: 65,
   },
   header: {
     flexDirection: 'row',
@@ -83,8 +90,8 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: 'contain',
     tintColor: '#888',
-    position:'absolute',
-    top:-12,
+    //position:'absolute',
+    //top:-12,
   },
   headerTitle: {
     fontSize: 20,

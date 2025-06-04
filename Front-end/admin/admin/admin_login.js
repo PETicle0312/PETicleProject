@@ -1,13 +1,16 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [managerId, setManagerId] = useState('');
   const [password, setPassword] = useState('');
 
   const onLogin = () => {
     // TODO: 로그인 처리 로직
-    alert('로그인 시도!!!'); 
+    //alert('로그인 시도!!!'); 
+    router.push("/admin/admin_main");
   };
 
   return (

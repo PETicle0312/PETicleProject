@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
 
 const arrowLeft = require('../../assets/images/arrow_left.png');
@@ -20,14 +21,20 @@ export default function AdminAccountEditScreen() {
   const [certCode, setCertCode] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
+  const router = useRouter();
+  const onBack = () => {
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
           <Image source={arrowLeft} style={styles.arrowIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>관리자 계정정보 변경</Text>
+        <View style={{width: 40}} /> {/* 오른쪽 여백용 */}
       </View>
 
       {/* 내용 */}
@@ -103,7 +110,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F6F6',
-    paddingTop: 38,
+    paddingTop: 65,
   },
   header: {
     flexDirection: 'row',
@@ -119,8 +126,6 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: 'contain',
     tintColor: '#888',
-    position:'absolute',
-    top: -12,
   },
   headerTitle: {
     flex: 1,

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
+import { useRouter , useLocalSearchParams } from 'expo-router';
 import { Modal, Button, Animated, Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+
 
 export default function AdminDetailScreen() {
     const SCREEN_HEIGHT = Dimensions.get('window').height;    
@@ -79,14 +80,16 @@ export default function AdminDetailScreen() {
     return require('../../../assets/images/levelEmpty_icon.png');
   };
 
+    const router = useRouter();
+    const onAlarm = () => {
+      router.push("/admin/alarm");
+    };
+    const onBack = () => {
+      router.back();
+    };    
 
   return (
     <View style={styles.container}>
-
-     {/* 테스트용 버튼: 실제로는 NFC 인식 콜백에서 setShowNfcPopup(true) */}
-      <TouchableOpacity onPress={() => setShowNfcPopup(true)}>
-        <Text>테스트로 NFC 팝업 열기</Text>
-      </TouchableOpacity>
 
       {/* =========== 팝업 모달 =========== */}
       <Modal
@@ -134,11 +137,14 @@ export default function AdminDetailScreen() {
 
       {/* 상단 헤더 */}
       <View style={styles.header}>
-        <Image source={require('../../../assets/images/text_logo.png')} style={styles.logoImage} />
-        <View style={styles.headerIcons}>
-          <Image source={require('../../../assets/images/admin_icon.png')} style={styles.icon} />
-          <Image source={require('../../../assets/images/alarm1_icon.png')} style={[styles.icon, { marginLeft: 10 }]} />
-        </View>
+                <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
+                  <Image source={require('../../../assets/images/arrow_left.png')} style={styles.arrowIcon} />
+                </TouchableOpacity>
+        <TouchableOpacity onPress={onAlarm}>
+          <View style={styles.headerIcons}>
+            <Image source={require('../../../assets/images/alarm1_icon.png')} style={[styles.icon, { marginLeft: 10 }]} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* 학교명 + 적재율 박스 */}
@@ -147,6 +153,10 @@ export default function AdminDetailScreen() {
           <Image source={require('../../../assets/images/school_icon.png')} style={styles.schoolIcon} />
           <Text style={styles.schoolTitle}>{school}</Text>
         </View>
+              {/* 테스트용 버튼: 실제로는 NFC 인식 콜백에서 setShowNfcPopup(true) */}
+      <TouchableOpacity onPress={() => setShowNfcPopup(true)}>
+        <Text>테스트로 NFC 팝업 열기</Text>
+      </TouchableOpacity>
         <View style={styles.arcBox}>
           {/* 반원 차트는 예시, 실제 구현은 SVG나 이미지 대체 */}
 
@@ -290,6 +300,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
     marginBottom: 20,
+  },
+    arrowIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+    tintColor: '#888',
   },
   logoImage: {
     width: 100,

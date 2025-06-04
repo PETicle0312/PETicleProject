@@ -1,11 +1,21 @@
 // ...기존 import
 import { useState } from 'react';
-import { useRouter} from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, View,TouchableOpacity } from 'react-native';
+
+export const options = {
+  headerShown: false,
+};
 
 export default function AdminMainScreen() {
   const [hasUnreadAlarm, setHasUnreadAlarm] = useState(false); // true면 새 알림 있음
   const router = useRouter();
+  const onPrivacy = () => {
+    router.push("/admin/admin_privacy");
+  };
+  const onAlarm = () => {
+    router.push("/admin/alarm");
+  };  
 
   return (
     
@@ -19,18 +29,22 @@ export default function AdminMainScreen() {
         />
         {/* 오른쪽: 두 개의 아이콘 이미지 */}
         <View style={styles.headerIcons}>
-          <Image
-            source={require('../../assets/images/admin_icon.png')} // 알림/문서 아이콘
-            style={styles.icon}
-          />
-          <Image
-            source={
-              hasUnreadAlarm
-                ? require('../../assets/images/alarm2_icon.png') // 새 알림 있으면 이 이미지!
-                : require('../../assets/images/alarm1_icon.png') // 없으면 이 이미지!
-            }
-            style={[styles.icon, { marginLeft: 10 }]}
-          />
+          <TouchableOpacity onPress={onPrivacy}>
+            <Image
+              source={require('../../assets/images/admin_icon.png') } // 알림/문서 아이콘
+              style={styles.icon}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onAlarm}>
+            <Image
+              source={
+                hasUnreadAlarm
+                  ? require('../../assets/images/alarm2_icon.png') // 새 알림 있으면 이 이미지!
+                  : require('../../assets/images/alarm1_icon.png') // 없으면 이 이미지!
+              }
+              style={[styles.icon, { marginLeft: 10 }]}
+            />
+          </TouchableOpacity>
         </View>
       </View>
 

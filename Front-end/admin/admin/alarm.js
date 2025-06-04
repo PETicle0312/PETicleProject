@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 
 // 아이콘 import
@@ -71,13 +72,20 @@ export default function AlarmScreen() {
     </View>
   );
 
+  const router = useRouter();
+  const onBack = () => {
+    router.back();
+  };
+  
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
           <Image source={arrowLeft} style={styles.arrowIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>알림</Text>
+        <View style={{width: 40}} /> {/* 오른쪽 여백용 */}
       </View>
 
       <ScrollView contentContainerStyle={{paddingBottom:30}}>
@@ -94,7 +102,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F6F6',
-    paddingTop: 38,
+    paddingTop: 65,
   },
   header: {
     flexDirection: 'row',
@@ -110,8 +118,8 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: 'contain',
     tintColor: '#888',
-    position:'absolute',
-    top: -12
+    //position:'absolute',
+    //top: -12
   },
   headerTitle: {
     fontSize: 20,

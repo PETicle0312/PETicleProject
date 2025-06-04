@@ -1,26 +1,39 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
 // 아이콘 import (경로를 실제 폴더 구조에 맞게 조정하세요!)
-const userIcon = require('../../assets/images/user_icon.png');
-const keyIcon = require('../../assets/images/key_icon.png');
-const arrowLeft = require('../../assets/images/arrow_left.png');
-
+  const userIcon = require('../../assets/images/user_icon.png');
+  const keyIcon = require('../../assets/images/key_icon.png');
+  const arrowLeft = require('../../assets/images/arrow_left.png');
+  
 export default function AdminPrivacyScreen() {
+  const router = useRouter();
+  const onBack = () => {
+    router.back();
+  };
+  const onPwd = () => {
+    router.push("/admin/pw_change");
+  };
+  const onPhone = () => {
+    router.push("/admin/admin_phonenumber");
+  };
+
+
   return (
     <View style={styles.container}>
       {/* 상단 네비게이션 바 */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
           <Image source={arrowLeft} style={styles.arrowIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>관리자 페이지</Text>
-        {/*<View style={{ width: 30 }} />  오른쪽 여백 */}
+        <View style={{width: 40}} /> {/* 오른쪽 여백용 */}
       </View>
 
       {/* 관리자 정보 박스 */}
       <View style={styles.infoBox}>
-        <View style={[styles.infoRow] , {marginBottom: 15}}>
+        <View style={[styles.infoRow , {marginBottom: 15}]}>
           <Text style={styles.infoLabel}>관리자 번호</Text>
           <Text style={styles.infoValue}>ARHS152DD</Text>
         </View>
@@ -33,7 +46,7 @@ export default function AdminPrivacyScreen() {
       {/* 메뉴 리스트 */}
       <View style={styles.menuBox}>
         {/* 비밀번호 변경 */}
-        <TouchableOpacity style={[styles.menuRow, {borderBottomWidth: 1, borderBottomColor: '#F1F1F1'}]}>
+        <TouchableOpacity onPress={onPwd} style={[styles.menuRow, {borderBottomWidth: 1, borderBottomColor: '#F1F1F1'}]}>
           <Image source={keyIcon} style={styles.menuIcon} />
           <Text style={styles.menuText}>비밀번호 변경</Text>
           <Image
@@ -42,7 +55,7 @@ export default function AdminPrivacyScreen() {
           />
         </TouchableOpacity>
         {/* 관리자 계정정보 변경 */}
-        <TouchableOpacity style={styles.menuRow}>
+        <TouchableOpacity onPress={onPhone} style={styles.menuRow}>
           <Image source={userIcon} style={styles.menuIcon} />
           <Text style={styles.menuText}>관리자 계정정보 변경</Text>
           <Image
@@ -65,7 +78,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F6F6',
-    paddingTop: 38,
+    paddingTop: 65,
   },
   header: {
     flexDirection: 'row',
@@ -81,8 +94,8 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: 'contain',
     tintColor: '#888',
-    position:'absolute',
-    top:-12,
+    //position:'absolute',
+    //top:-12,
   },
   headerTitle: {
     fontSize: 20,
