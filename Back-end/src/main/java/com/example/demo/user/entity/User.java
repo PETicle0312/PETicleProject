@@ -1,5 +1,7 @@
 package com.example.demo.user.entity;
 
+import com.example.demo.school.entity.School;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,18 +13,36 @@ import lombok.*;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name="user_id", length = 50)
+    private String userId;
 
-    private String username;
+    @Column(name = "character_name")
+    private String charName;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "last_played")
+    private String lastPlayed;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "password")
     private String password;
-    private String phone;
-    private int totalLives = 3;
 
-    public User(String username, String password, String phone) {
-        this.username = username;
-        this.password = password;
-        this.phone = phone;
-        this.totalLives = 3;
-    }
+    @Column(name = "phone_number")
+    private String mobile;
+
+    @Column(name = "register_date")
+    private String registerDate;
+
+    @Column(name = "total_lives")
+    private int totalLives;
+
+    @ManyToOne
+    @JoinColumn(name = "school_id")  // 외래키
+    private School school;
+
+
 }

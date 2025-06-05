@@ -17,6 +17,7 @@ public class PetInputLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
     private Long logId;
 
     @ManyToOne
@@ -25,17 +26,18 @@ public class PetInputLog {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User userId;
 
+    @JoinColumn(name = "student_number")
     private String studentNumber;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 
-    @Column(nullable = false)
+    @Column(name = "input_count", nullable = false)
     private int inputCount;
 
-    @Column(nullable = false)
+    @Column(name = "input_time", nullable = false)
     private String inputTime; // yyyy-MM-dd HH:mm:ss 등
 }

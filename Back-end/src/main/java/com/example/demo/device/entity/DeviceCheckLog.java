@@ -16,19 +16,20 @@ public class DeviceCheckLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "check_log_id")
     private Long checkLogId;
 
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
-    private Admin admin;
+    private Admin adminId;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
-    private Device device;
+    private Device deviceId;
 
-    @Column(nullable = false)
+    @Column(name = "action_type", nullable = false)
     private String actionType;  // 예: "정기 점검", "수거 완료", "문제 해결"
 
-    @Column(nullable = false)
+    @Column(name = "log_time", nullable = false)
     private String logTime;     // yyyy-MM-dd HH:mm:ss
 }

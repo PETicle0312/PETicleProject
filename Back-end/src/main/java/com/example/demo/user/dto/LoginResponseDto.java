@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponseDto {
-    private Long userId;
-    private String username;
-    private int totalLives;
+    private String userId;
+    private int score;
 }

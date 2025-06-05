@@ -16,6 +16,7 @@ public class AdminNotification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column( name = "notification_id")
     private Long notificationId;
 
     @ManyToOne
@@ -26,7 +27,7 @@ public class AdminNotification {
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 
-    @Column(nullable = false)
+    @Column( name = "", nullable = false)
     private String notificationTime; // yyyy-MM-dd HH:mm:ss 등
 
     private String message; // 알림 메시지 내용 (선택)

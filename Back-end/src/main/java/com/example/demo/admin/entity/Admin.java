@@ -13,16 +13,17 @@ import lombok.*;
 public class Admin {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue( strategy = GenerationType.IDENTITY)
+    @Column(name = "admin_id")
     private Long adminId;
 
-    @Column(nullable = false)
+    @Column(name = "adm_name", nullable = false)
     private String admName;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "adm_phone_number", nullable = false, unique = true)
     private String admPhoneNumber;
 
-    @Column(nullable = false)
+    @Column(name = "adm_password", nullable = false)
     private String admPassword;
 
     @Column(name = "created_at")
