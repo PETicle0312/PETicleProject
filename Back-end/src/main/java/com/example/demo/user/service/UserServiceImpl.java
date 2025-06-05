@@ -1,5 +1,6 @@
 package com.example.demo.user.service;
 
+import com.example.demo.repository.GameSessionRepository;
 import com.example.demo.user.dto.*;
 import com.example.demo.user.entity.User;
 import com.example.demo.user.repository.UserRepository;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final GameSessionRepository gameSessionRepository; 
 
     @Override
     public String registerUser(UserRegisterDto dto) {
