@@ -126,6 +126,15 @@ export default function RegisterScreen() {
               </Text>
             )}
           </Pressable>
+
+          {/*이름*/}
+        </View>
+        <Text style={styles.label}>이름</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={styles.inputFlex}
+            placeholder="이름을 입력해 주세요"
+          />
         </View>
 
         {/* 휴대폰 번호 */}
@@ -137,6 +146,21 @@ export default function RegisterScreen() {
             keyboardType="phone-pad"
           />
           <Pressable
+            onPress={() => Alert.alert("인증 확인", "인증이 완료되었습니다!")}
+            style={({ pressed }) => [
+              styles.buttonSmall,
+              pressed && styles.buttonSmallPressed,
+            ]}
+          >
+            {({ pressed }) => (
+              <Text
+                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
+              >
+                &ensp;&ensp;인증하기&nbsp;&ensp;
+              </Text>
+            )}
+          </Pressable>
+          {/*<Pressable
             onPress={() => Alert.alert("인증번호가 전송 되었습니다!")}
             style={({ pressed }) => [
               styles.buttonSmall,
@@ -150,9 +174,9 @@ export default function RegisterScreen() {
                 인증번호받기
               </Text>
             )}
-          </Pressable>
+          </Pressable> */}
         </View>
-        <View style={styles.row}>
+        {/*<View style={styles.row}>
           <TextInput
             style={styles.inputFlex}
             placeholder="인증번호를 입력하세요"
@@ -173,7 +197,7 @@ export default function RegisterScreen() {
               </Text>
             )}
           </Pressable>
-        </View>
+        </View>*/}
 
         {/* 아이디 */}
         <Text style={styles.label}>아이디</Text>
@@ -212,7 +236,6 @@ export default function RegisterScreen() {
         </View>
 
         {/* 비밀번호 */}
-        {/* 아이디 */}
         <Text style={styles.label}>비밀번호</Text>
         <View style={styles.row}>
           <TextInput
@@ -236,7 +259,7 @@ export default function RegisterScreen() {
             Alert.alert("축하드립니다", "PETicle 가입이 완료되었습니다!", [
               {
                 text: "확인",
-                onPress: () => router.replace("/user/gamemain"),
+                onPress: () => router.replace("/user/login"),
               },
             ])
           }

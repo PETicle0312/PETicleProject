@@ -46,7 +46,7 @@ export default function LoginScreen() {
               styles.button,
               pressed && styles.buttonPressed,
             ]}
-            onPress={() => console.log("로그인 눌림")}
+            onPress={() => router.push("/user/gamemain")}
           >
             <Text style={styles.buttonText}>로그인</Text>
           </Pressable>
