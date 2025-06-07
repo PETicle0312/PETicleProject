@@ -16,21 +16,22 @@ public class Ranking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="ranking_id")
     private Long rankingId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User userId;
 
-    @Column(nullable = false)
+    @Column(name = "period_start",nullable = false)
     private String periodStart;
 
-    @Column(nullable = false)
+    @Column(name = "period_end", nullable = false)
     private String periodEnd;
 
-    @Column(nullable = false)
+    @Column(name = "rank_position",nullable = false)
     private int rankPosition;
 
-    @Column(nullable = false)
+    @Column(name = "higest_score",nullable = false)
     private int highestScore;
 }

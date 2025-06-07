@@ -3,6 +3,7 @@ package com.example.demo.school.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.demo.user.entity.User;
@@ -18,13 +19,14 @@ public class School {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="school_id")
     private Long schoolId;
 
-    @Column(nullable = false)
+    @Column(name="school_name",nullable = false)
     private String schoolName;
 
     private String region;
 
     @OneToMany(mappedBy = "school")
-    private List<User> users;
+    private List<User> users= new ArrayList<>();
 }

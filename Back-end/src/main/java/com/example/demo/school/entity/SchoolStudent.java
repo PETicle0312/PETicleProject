@@ -14,18 +14,19 @@ public class SchoolStudent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long schoolStudentId;
+    @Column(name="student_id")
+    private Long stdnId;
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
-    private School school;
+    private School schoolId;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name="student_name",nullable = false)
+    private String stdnName;
 
-    @Column(nullable = false)
-    private String phoneNumber;
+    @Column(name="student_phone_number",nullable = false)
+    private String stdnMobile;
 
-    @Column(nullable = false)
-    private String studentNumber;
+    @Column(name="student_number", nullable = false)
+    private String stdnNum;
 }

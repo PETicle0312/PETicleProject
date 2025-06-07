@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UserRankingDto {
-    private String username;
+    private String name;
     private int totalLives;
 }

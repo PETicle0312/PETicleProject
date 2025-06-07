@@ -4,6 +4,9 @@ import com.example.demo.user.dto.*;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public interface UserService {
     String registerUser(UserRegisterDto dto);
 
