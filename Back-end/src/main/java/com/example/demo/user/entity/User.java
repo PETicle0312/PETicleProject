@@ -1,6 +1,6 @@
 package com.example.demo.user.entity;
 
-import com.example.demo.school.entity.School;
+import com.example.demo.school.entity.SchoolEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +13,7 @@ import lombok.*;
 public class User {
 
     @Id
-    @Column(name="user_id", length = 50)
+    @Column(name = "user_id", length = 50)
     private String userId;
 
     @Column(name = "character_name")
@@ -41,8 +41,7 @@ public class User {
     private int totalLives;
 
     @ManyToOne
-    @JoinColumn(name = "school_id")  // 외래키
-    private School school;
-
+    @JoinColumn(name = "school_id") // 외래키
+    private SchoolEntity school;
 
 }

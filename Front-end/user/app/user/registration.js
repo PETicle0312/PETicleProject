@@ -11,6 +11,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -27,140 +31,161 @@ export default function RegisterScreen() {
     "서울고등학교",
   ]);
 
+  // 비밀번호 보기 토글
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>회원가입</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.container}>
+          <ScrollView contentContainerStyle={styles.content}>
+            <Text style={styles.title}>회원가입</Text>
 
-        {/* 학교 입력 필드 */}
-        <Text style={styles.label}>학교를 선택해 주세요</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="학교를 입력해 주세요"
-          />
-          <Pressable
-            onPress={() => setModalVisible(true)}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
-              >
-                학교검색하기
-              </Text>
-            )}
-          </Pressable>
-        </View>
-
-        {/*학교검색 모달창 */}
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              {/* 닫기 버튼 (오른쪽 위) */}
+            {/* 학교 입력 필드 */}
+            <Text style={styles.label}>학교를 선택해 주세요</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="학교를 입력해 주세요"
+              />
               <Pressable
-                style={styles.modalCloseButton}
-                onPress={() => setModalVisible(false)}
+                onPress={() => setModalVisible(true)}
+                style={({ pressed }) => [
+                  styles.buttonSmall,
+                  pressed && styles.buttonSmallPressed,
+                ]}
               >
-                <Ionicons name="close" size={28} color="#999" />
+                {({ pressed }) => (
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      pressed && styles.buttonTextPressed,
+                    ]}
+                  >
+                    학교검색하기
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+
+            {/*학교검색 모달창 */}
+            <Modal
+              visible={modalVisible}
+              animationType="slide"
+              transparent
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  {/* 닫기 버튼 (오른쪽 위) */}
+                  <Pressable
+                    style={styles.modalCloseButton}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Ionicons name="close" size={28} color="#999" />
+                  </Pressable>
+
+                  {/* 검색창 */}
+                  <View style={styles.modalSearchRow}>
+                    <TextInput
+                      style={styles.modalSearchInput}
+                      placeholder="학교를 입력해 주세요"
+                      value={schoolSearch}
+                      onChangeText={setSchoolSearch}
+                      placeholderTextColor="#aaa"
+                    />
+                    <Ionicons name="search" size={22} color="#999" />
+                  </View>
+
+                  {/* 학교 리스트 */}
+                  <FlatList
+                    data={schools.filter((item) =>
+                      item.includes(schoolSearch.trim())
+                    )}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item }) => (
+                      <Pressable
+                        style={styles.schoolItem}
+                        onPress={() => {
+                          console.log("선택된 학교:", item);
+                          setModalVisible(false);
+                        }}
+                      >
+                        <Text style={styles.schoolItemText}>{item}</Text>
+                      </Pressable>
+                    )}
+                  />
+                </View>
+              </View>
+            </Modal>
+
+            {/* 학번 입력 필드 */}
+            <Text style={styles.label}>학번을 입력해 주세요</Text>
+            <View style={styles.row}>
+              <TextInput style={styles.inputFlex} keyboardType="numeric" />
+              <Pressable
+                onPress={() =>
+                  Alert.alert("학번 확인", "학번이 인증되었습니다!")
+                }
+                style={({ pressed }) => [
+                  styles.buttonSmall,
+                  pressed && styles.buttonSmallPressed,
+                ]}
+              >
+                {({ pressed }) => (
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      pressed && styles.buttonTextPressed,
+                    ]}
+                  >
+                    학번인증하기
+                  </Text>
+                )}
               </Pressable>
 
-              {/* 검색창 */}
-              <View style={styles.modalSearchRow}>
-                <TextInput
-                  style={styles.modalSearchInput}
-                  placeholder="학교를 입력해 주세요"
-                  value={schoolSearch}
-                  onChangeText={setSchoolSearch}
-                  placeholderTextColor="#aaa"
-                />
-                <Ionicons name="search" size={22} color="#999" />
-              </View>
-
-              {/* 학교 리스트 */}
-              <FlatList
-                data={schools.filter((item) =>
-                  item.includes(schoolSearch.trim())
-                )}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                  <Pressable
-                    style={styles.schoolItem}
-                    onPress={() => {
-                      console.log("선택된 학교:", item);
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.schoolItemText}>{item}</Text>
-                  </Pressable>
-                )}
+              {/*이름*/}
+            </View>
+            <Text style={styles.label}>이름</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="이름을 입력해 주세요"
               />
             </View>
-          </View>
-        </Modal>
 
-        {/* 학번 입력 필드 */}
-        <Text style={styles.label}>학번을 입력해 주세요</Text>
-        <View style={styles.row}>
-          <TextInput style={styles.inputFlex} keyboardType="numeric" />
-          <Pressable
-            onPress={() => Alert.alert("학번 확인", "학번이 인증되었습니다!")}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
+            {/* 휴대폰 번호 */}
+            <Text style={styles.label}>휴대폰 번호</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="휴대폰 번호"
+                keyboardType="phone-pad"
+              />
+              <Pressable
+                onPress={() =>
+                  Alert.alert("인증 확인", "인증이 완료되었습니다!")
+                }
+                style={({ pressed }) => [
+                  styles.buttonSmall,
+                  pressed && styles.buttonSmallPressed,
+                ]}
               >
-                학번인증하기
-              </Text>
-            )}
-          </Pressable>
-
-          {/*이름*/}
-        </View>
-        <Text style={styles.label}>이름</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="이름을 입력해 주세요"
-          />
-        </View>
-
-        {/* 휴대폰 번호 */}
-        <Text style={styles.label}>휴대폰 번호</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="휴대폰 번호"
-            keyboardType="phone-pad"
-          />
-          <Pressable
-            onPress={() => Alert.alert("인증 확인", "인증이 완료되었습니다!")}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
-              >
-                &ensp;&ensp;인증하기&nbsp;&ensp;
-              </Text>
-            )}
-          </Pressable>
-          {/*<Pressable
+                {({ pressed }) => (
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      pressed && styles.buttonTextPressed,
+                    ]}
+                  >
+                    &ensp;&ensp;인증하기&nbsp;&ensp;
+                  </Text>
+                )}
+              </Pressable>
+              {/*<Pressable
             onPress={() => Alert.alert("인증번호가 전송 되었습니다!")}
             style={({ pressed }) => [
               styles.buttonSmall,
@@ -175,8 +200,8 @@ export default function RegisterScreen() {
               </Text>
             )}
           </Pressable> */}
-        </View>
-        {/*<View style={styles.row}>
+            </View>
+            {/*<View style={styles.row}>
           <TextInput
             style={styles.inputFlex}
             placeholder="인증번호를 입력하세요"
@@ -199,85 +224,113 @@ export default function RegisterScreen() {
           </Pressable>
         </View>*/}
 
-        {/* 아이디 */}
-        <Text style={styles.label}>아이디</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="아이디를 입력해 주세요"
-          />
-          <Pressable
-            onPress={() => {
-              const inputId = "testuser"; // 실제론 TextInput의 state값
-              const existingIds = ["testuser", "user123", "admin"]; // 예시 DB
+            {/* 아이디 */}
+            <Text style={styles.label}>아이디</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="아이디를 입력해 주세요"
+              />
+              <Pressable
+                onPress={() => {
+                  const inputId = "testuser"; // 실제론 TextInput의 state값
+                  const existingIds = ["testuser", "user123", "admin"]; // 예시 DB
 
-              if (existingIds.includes(inputId)) {
-                Alert.alert("중복된 아이디", "이미 사용 중인 아이디입니다.", [
-                  { text: "확인", onPress: () => console.log("확인 눌림") },
-                  { text: "취소", style: "cancel" },
-                ]);
-              } else {
-                Alert.alert("사용 가능", "사용 가능한 아이디입니다.");
-              }
-            }}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
+                  if (existingIds.includes(inputId)) {
+                    Alert.alert(
+                      "중복된 아이디",
+                      "이미 사용 중인 아이디입니다.",
+                      [
+                        {
+                          text: "확인",
+                          onPress: () => console.log("확인 눌림"),
+                        },
+                        { text: "취소", style: "cancel" },
+                      ]
+                    );
+                  } else {
+                    Alert.alert("사용 가능", "사용 가능한 아이디입니다.");
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.buttonSmall,
+                  pressed && styles.buttonSmallPressed,
+                ]}
               >
-                &ensp;&ensp;중복확인&nbsp;&ensp;
-              </Text>
-            )}
-          </Pressable>
-        </View>
+                {({ pressed }) => (
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      pressed && styles.buttonTextPressed,
+                    ]}
+                  >
+                    &ensp;&ensp;중복확인&nbsp;&ensp;
+                  </Text>
+                )}
+              </Pressable>
+            </View>
 
-        {/* 비밀번호 */}
-        <Text style={styles.label}>비밀번호</Text>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="비밀번호를 입력해 주세요"
-          />
-        </View>
-        <View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="비밀번호를 다시 한번 입력해 주세요"
-          />
-        </View>
-        <Text style={styles.hint}>
-          6~20자 / 영문, 대문자, 소문자, 숫자, 특수문자 중 2가지 이상 조합
-        </Text>
+            {/* 비밀번호 */}
+            <Text style={styles.label}>비밀번호</Text>
+            <View style={[styles.row, { position: "relative" }]}>
+              <TextInput
+                style={[styles.inputFlex, { paddingRight: 40 }]}
+                placeholder="비밀번호를 입력해 주세요"
+                secureTextEntry={!showPassword}
+              />
+              <Pressable
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword((prev) => !prev)}
+              >
+                <Ionicons
+                  name={showPassword ? "eye" : "eye-off"}
+                  size={22}
+                  color="#999"
+                />
+              </Pressable>
+            </View>
 
-        {/* 가입하기 */}
-        <Pressable
-          onPress={() =>
-            Alert.alert("축하드립니다", "PETicle 가입이 완료되었습니다!", [
-              {
-                text: "확인",
-                onPress: () => router.replace("/user/login"),
-              },
-            ])
-          }
-          style={({ pressed }) => [
-            styles.buttonSmall,
-            pressed && styles.buttonSmallPressed,
-          ]}
-        >
-          {({ pressed }) => (
-            <Text
-              style={[styles.submitText, pressed && styles.buttonTextPressed]}
-            >
-              가입하기
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="비밀번호를 다시 한번 입력해 주세요"
+                secureTextEntry={true}
+              />
+            </View>
+            <Text style={styles.hint}>
+              6~20자 / 영문, 대문자, 소문자, 숫자, 특수문자 중 2가지 이상 조합
             </Text>
-          )}
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+
+            {/* 가입하기 */}
+            <Pressable
+              onPress={() =>
+                Alert.alert("축하드립니다", "PETicle 가입이 완료되었습니다!", [
+                  {
+                    text: "확인",
+                    onPress: () => router.replace("/user/login"),
+                  },
+                ])
+              }
+              style={({ pressed }) => [
+                styles.buttonSmall,
+                pressed && styles.buttonSmallPressed,
+              ]}
+            >
+              {({ pressed }) => (
+                <Text
+                  style={[
+                    styles.submitText,
+                    pressed && styles.buttonTextPressed,
+                  ]}
+                >
+                  가입하기
+                </Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -408,5 +461,10 @@ const styles = StyleSheet.create({
   schoolItemText: {
     fontSize: 17,
     color: "#333",
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 14,
+    top: 13,
   },
 });

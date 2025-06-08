@@ -1,6 +1,6 @@
 package com.example.demo.device.entity;
 
-import com.example.demo.school.entity.School;
+import com.example.demo.school.entity.SchoolEntity;
 import com.example.demo.user.entity.User;
 
 import jakarta.persistence.*;
@@ -22,7 +22,7 @@ public class PetInputLog {
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
-    private School school;
+    private SchoolEntity school;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

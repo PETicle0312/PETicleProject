@@ -1,6 +1,6 @@
 package com.example.demo.device.entity;
 
-import com.example.demo.school.entity.School;
+import com.example.demo.school.entity.SchoolEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,14 +21,14 @@ public class Device {
 
     @ManyToOne
     @JoinColumn(name = "school_id", nullable = false)
-    private School school;
+    private SchoolEntity school;
 
     private int capacity;
 
     @Column(name = "last_update")
-    private String lastUpdate;  // yyyy-MM-dd HH:mm:ss
+    private String lastUpdate; // yyyy-MM-dd HH:mm:ss
 
-    private Double latitude;   // 위도
+    private Double latitude; // 위도
 
-    private Double longitude;  // 경도
+    private Double longitude; // 경도
 }
