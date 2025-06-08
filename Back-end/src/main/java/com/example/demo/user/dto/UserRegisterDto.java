@@ -9,5 +9,6 @@ public class UserRegisterDto {
     private String mobile;
     private String name;
     private String schoolName;       // 학교 이름만 받는 경우
+    private String confirmPassword;
     //private String studentNumber;
 }
