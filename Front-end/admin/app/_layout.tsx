@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native'; 
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -21,10 +22,16 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/admin_main" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/admin_details/[school]" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/admin_phonenumber" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/admin_privacy" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/alarm" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/pw_change" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      {/* <StatusBar style="auto" /> */}
+      {/*<StatusBar hidden={true} /> */}
     </ThemeProvider>
-    
   );
 }
