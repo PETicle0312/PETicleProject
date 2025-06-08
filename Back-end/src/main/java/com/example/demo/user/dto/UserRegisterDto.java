@@ -6,9 +6,9 @@ import lombok.Data;
 public class UserRegisterDto {
     private String userId;
     private String password;
-    private String mobile;
+    private String confirmPassword; // 비밀번호 확인
+    private String phone;           // → User 엔티티에서는 mobile이지만, setter로 매핑 가능
     private String name;
-    private String schoolName;       // 학교 이름만 받는 경우
-    private String confirmPassword;
-    //private String studentNumber;
+    private String studentNumber;
+    private String schoolId; // ✅ schoolId로 받아서 schoolRepository로 조회
 }
