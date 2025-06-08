@@ -1,3 +1,15 @@
+package com.example.demo.school.service;
+
+import com.example.demo.school.dto.StudentVerifyDto;
+import com.example.demo.school.entity.SchoolEntity;
+import com.example.demo.school.repository.SchoolRepository;
+import com.example.demo.school.repository.SchoolStudentRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class SchoolService {

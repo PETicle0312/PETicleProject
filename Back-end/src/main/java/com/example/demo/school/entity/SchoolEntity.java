@@ -1,15 +1,19 @@
+package com.example.demo.school.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
 @Entity
-@Table(name = "schools")
+@Table(name = "school")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class SchoolEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long schoolId;
+    private Long id;
 
-    private String region;
-
-    @Column(name = "school_name")
+    @Column
     private String schoolName;
 }

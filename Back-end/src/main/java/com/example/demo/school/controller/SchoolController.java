@@ -20,16 +20,21 @@ public class SchoolController {
         this.schoolService = schoolService;
     }
 
+    // 학교 검색 (키워드로)
     @GetMapping("/search")
     public ResponseEntity<List<String>> searchSchool(@RequestParam String keyword) {
-        return ResponseEntity.ok(schoolService.searchSchool(keyword));
+        List<String> schoolNames = schoolService.searchSchool(keyword);
+        return ResponseEntity.ok(schoolNames);
     }
 
+    // 학생 인증
     @PostMapping("/verify")
     public ResponseEntity<String> verifyStudent(@RequestBody StudentVerifyDto dto) {
         boolean verified = schoolService.verifyStudent(dto);
-        return verified
-                ? ResponseEntity.ok("학생 인증 완료")
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body("학생 인증 실패");
+        if (verified) {
+            return ResponseEntity.ok("학생 인증 완료");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("학생 인증 실패");
+        }
     }
 }

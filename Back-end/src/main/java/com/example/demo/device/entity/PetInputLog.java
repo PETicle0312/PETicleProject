@@ -1,5 +1,7 @@
 package com.example.demo.device.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.demo.school.entity.SchoolEntity;
 import com.example.demo.user.entity.User;
 
@@ -28,7 +30,7 @@ public class PetInputLog {
     @JoinColumn(name = "user_id", nullable = false)
     private User userId;
 
-    @JoinColumn(name = "student_number")
+    @Column(name = "student_number", nullable = false)
     private String studentNumber;
 
     @ManyToOne
@@ -39,5 +41,6 @@ public class PetInputLog {
     private int inputCount;
 
     @Column(name = "input_time", nullable = false)
-    private String inputTime; // yyyy-MM-dd HH:mm:ss 등
+    private LocalDateTime inputTime;
+
 }
