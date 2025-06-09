@@ -1,7 +1,7 @@
 package com.example.demo.school.service;
 
 import com.example.demo.school.dto.StudentVerifyDto;
-import com.example.demo.school.entity.SchoolEntity;
+import com.example.demo.school.entity.SchoolStudentEntity;
 import com.example.demo.school.repository.SchoolRepository;
 import com.example.demo.school.repository.SchoolStudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +20,13 @@ public class SchoolService {
     public List<String> searchSchool(String keyword) {
         return schoolRepository.findBySchoolNameContaining(keyword)
                 .stream()
-                .map(SchoolEntity::getSchoolName)
+                .map(s -> s.getSchoolName())
                 .collect(Collectors.toList());
     }
 
     public boolean verifyStudent(StudentVerifyDto dto) {
         return studentRepository.findByStudentNumberAndSchool_SchoolName(dto.getStudentNumber(), dto.getSchoolName())
-                .map(student -> student.getName().equals(dto.getName()))
+                .map(student -> student.getStudentName().equals(dto.getStudentName()))
                 .orElse(false);
     }
 }
