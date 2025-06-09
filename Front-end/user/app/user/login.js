@@ -6,7 +6,7 @@ import {
   Text,
   TextInput,
   View,
-  Alert
+  Alert,
 } from "react-native";
 import axios from "axios";
 import { useRouter } from "expo-router";
@@ -18,25 +18,25 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const handleLogin = async () => {
-  try {
-    const response = await axios.post("http://172.30.1.38:8080/auth/login", {
-      userId,
-      password,
-    });
+    try {
+      const response = await axios.post("http://172.30.1.38:8080/auth/login", {
+        userId,
+        password,
+      });
 
-    if (response.data === "로그인 성공") {
+      if (response.data === "로그인 성공") {
         console.log("✅ 로그인 성공:", response.data);
         Alert.alert("로그인 성공", `환영합니다!`);
         router.replace("/user/gamemain");
-    } else {
+      } else {
         console.log("✅ 로그인 실패:", response.data);
-        Alert.alert("로그인 실패", response.data);  // 서버 응답 메시지 보여줌
-    }   
-  } catch (error) {
-    console.error("❌ 로그인 실패:", error.response?.data || error.message);
-    Alert.alert("로그인 실패", "아이디 또는 비밀번호를 확인해 주세요.");
-  }
-};
+        Alert.alert("로그인 실패", response.data); // 서버 응답 메시지
+      }
+    } catch (error) {
+      console.error("❌ 로그인 실패:", error.response?.data || error.message);
+      Alert.alert("로그인 실패", "아이디 또는 비밀번호를 확인해 주세요.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +51,6 @@ export default function LoginScreen() {
         <Text style={styles.label}>아이디</Text>
         <TextInput
           style={styles.input}
-          placeholder="아이디를 입력해 주세요"
           value={userId}
           onChangeText={setUserId}
         />
@@ -59,7 +58,6 @@ export default function LoginScreen() {
         <Text style={styles.label}>비밀번호</Text>
         <TextInput
           style={styles.input}
-          placeholder="비밀번호를 입력해 주세요"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -82,7 +80,7 @@ export default function LoginScreen() {
               styles.button,
               pressed && styles.buttonPressed,
             ]}
-            onPress={handleLogin} 
+            onPress={() => router.push("/user/gamemain")}
           >
             <Text style={styles.buttonText}>로그인</Text>
           </Pressable>
