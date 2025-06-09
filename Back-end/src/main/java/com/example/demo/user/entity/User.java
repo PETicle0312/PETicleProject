@@ -1,7 +1,6 @@
 package com.example.demo.user.entity;
 
 import com.example.demo.school.entity.SchoolEntity;
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,7 +31,7 @@ public class User {
     private String password;
 
     @Column(name = "phone_number")
-    private String mobile;
+    private String phone;
 
     @Column(name = "register_date")
     private String registerDate;
@@ -40,8 +39,13 @@ public class User {
     @Column(name = "total_lives")
     private int totalLives;
 
-    @ManyToOne
-    @JoinColumn(name = "school_id") // 외래키
-    private SchoolEntity school;
+    @Column(name = "student_number")
+    private String studentNumber; 
 
+    @Column(name = "score")
+    private int score;             
+
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private SchoolEntity school;
 }

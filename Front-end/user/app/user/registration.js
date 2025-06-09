@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import axios from "axios";
 import {
   Alert,
   FlatList,
@@ -19,6 +20,47 @@ import {
 } from "react-native";
 
 export default function RegisterScreen() {
+
+const [userId, setUserId] = useState("");
+const [password, setPassword] = useState("");
+const [phone, setPhone] = useState("");  
+const [schoolName, setSchoolName] = useState("");
+const [studentNumber, setStudentNumber] = useState("");
+const [name, setName] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
+
+
+const handleRegister = async () => {
+  if (password !== confirmPassword) {
+    Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
+    return; // 회원가입 요청 보내지 않음
+  }
+
+  try {
+    const response = await axios.post("http://172.30.1.38:8080/auth/register", {
+      userId,
+      password,
+      phone,
+      schoolName,
+      studentNumber,
+      name,
+      confirmPassword, //추가
+    });
+
+    console.log("✅ 회원가입 성공:", response.data);
+    Alert.alert("가입 성공", "회원가입이 완료되었습니다!", [
+      {
+        text: "확인",
+        onPress: () => router.replace("/user/login"),
+      },
+    ]);
+  } catch (error) {
+    console.error("❌ 회원가입 실패:", error);
+    Alert.alert("오류", "회원가입 중 문제가 발생했습니다.");
+  }
+};
+//위에 김혜인
+
   const router = useRouter();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -112,6 +154,7 @@ export default function RegisterScreen() {
                         onPress={() => {
                           console.log("선택된 학교:", item);
                           setModalVisible(false);
+                          setSchoolName(item); //김혜인
                         }}
                       >
                         <Text style={styles.schoolItemText}>{item}</Text>
@@ -125,7 +168,12 @@ export default function RegisterScreen() {
             {/* 학번 입력 필드 */}
             <Text style={styles.label}>학번을 입력해 주세요</Text>
             <View style={styles.row}>
-              <TextInput style={styles.inputFlex} keyboardType="numeric" />
+              <TextInput
+                style={styles.inputFlex}
+                keyboardType="numeric"
+                value={studentNumber} //김혜인
+                onChangeText={setStudentNumber} //김혜인
+              />
               <Pressable
                 onPress={() =>
                   Alert.alert("학번 확인", "학번이 인증되었습니다!")
@@ -154,6 +202,8 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.inputFlex}
                 placeholder="이름을 입력해 주세요"
+                value={name} //김혜인
+                onChangeText={setName} //김혜인
               />
             </View>
 
@@ -164,6 +214,8 @@ export default function RegisterScreen() {
                 style={styles.inputFlex}
                 placeholder="휴대폰 번호"
                 keyboardType="phone-pad"
+                value={phone} //김혜인
+                onChangeText={setPhone} //김혜인
               />
               <Pressable
                 onPress={() =>
@@ -230,6 +282,8 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.inputFlex}
                 placeholder="아이디를 입력해 주세요"
+                value={userId} //김혜인
+                onChangeText={setUserId} //김혜인
               />
               <Pressable
                 onPress={() => {
@@ -277,6 +331,8 @@ export default function RegisterScreen() {
                 style={[styles.inputFlex, { paddingRight: 40 }]}
                 placeholder="비밀번호를 입력해 주세요"
                 secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
               <Pressable
                 style={styles.eyeIcon}
@@ -295,6 +351,8 @@ export default function RegisterScreen() {
                 style={styles.inputFlex}
                 placeholder="비밀번호를 다시 한번 입력해 주세요"
                 secureTextEntry={true}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
               />
             </View>
             <Text style={styles.hint}>
@@ -303,6 +361,13 @@ export default function RegisterScreen() {
 
             {/* 가입하기 */}
             <Pressable
+              onPress={handleRegister}
+              style={({ pressed }) => [
+                styles.buttonSmall,
+                pressed && styles.buttonSmallPressed,
+              ]}
+            >
+            {/* <Pressable
               onPress={() =>
                 Alert.alert("축하드립니다", "PETicle 가입이 완료되었습니다!", [
                   {
@@ -315,7 +380,7 @@ export default function RegisterScreen() {
                 styles.buttonSmall,
                 pressed && styles.buttonSmallPressed,
               ]}
-            >
+            > */}
               {({ pressed }) => (
                 <Text
                   style={[

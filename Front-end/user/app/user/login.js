@@ -6,12 +6,37 @@ import {
   Text,
   TextInput,
   View,
+  Alert
 } from "react-native";
-
+import axios from "axios";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 
 export default function LoginScreen() {
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
+
+  const handleLogin = async () => {
+  try {
+    const response = await axios.post("http://172.30.1.38:8080/auth/login", {
+      userId,
+      password,
+    });
+
+    if (response.data === "로그인 성공") {
+        console.log("✅ 로그인 성공:", response.data);
+        Alert.alert("로그인 성공", `환영합니다!`);
+        router.replace("/user/gamemain");
+    } else {
+        console.log("✅ 로그인 실패:", response.data);
+        Alert.alert("로그인 실패", response.data);  // 서버 응답 메시지 보여줌
+    }   
+  } catch (error) {
+    console.error("❌ 로그인 실패:", error.response?.data || error.message);
+    Alert.alert("로그인 실패", "아이디 또는 비밀번호를 확인해 주세요.");
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -24,10 +49,21 @@ export default function LoginScreen() {
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>아이디</Text>
-        <TextInput style={styles.input} />
+        <TextInput
+          style={styles.input}
+          placeholder="아이디를 입력해 주세요"
+          value={userId}
+          onChangeText={setUserId}
+        />
 
         <Text style={styles.label}>비밀번호</Text>
-        <TextInput style={styles.input} />
+        <TextInput
+          style={styles.input}
+          placeholder="비밀번호를 입력해 주세요"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
         <Pressable
           onPress={() => console.log("비밀번호 찾기")}
@@ -46,7 +82,7 @@ export default function LoginScreen() {
               styles.button,
               pressed && styles.buttonPressed,
             ]}
-            onPress={() => router.push("/user/gamemain")}
+            onPress={handleLogin} 
           >
             <Text style={styles.buttonText}>로그인</Text>
           </Pressable>
