@@ -74,6 +74,8 @@ export default function RegisterScreen() {
     }
   };
 
+  //김혜인 api
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
