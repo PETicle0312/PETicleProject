@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Alert,
@@ -34,13 +34,27 @@ export default function RegisterScreen() {
   const [schoolSearch, setSchoolSearch] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const [schools] = useState([
-    "중앙고등학교",
-    "경기고등학교",
-    "용산고등학교",
-    "무학여자고등학교",
-    "서울고등학교",
-  ]);
+  const [schoolResults, setSchoolResults] = useState([]);
+
+  // 학교 검색 API 호출
+  const fetchSchools = async (keyword) => {
+    try {
+      const response = await axios.get(
+        `http://172.30.1.38:8080/api/school/search?keyword=${keyword}`
+      );
+      setSchoolResults(response.data);
+    } catch (error) {
+      console.error("❌ 학교 검색 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (schoolSearch.trim().length > 0) {
+      fetchSchools(schoolSearch.trim());
+    } else {
+      setSchoolResults([]);
+    }
+  }, [schoolSearch]);
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
@@ -73,8 +87,6 @@ export default function RegisterScreen() {
       Alert.alert("오류", "회원가입 중 문제가 발생했습니다.");
     }
   };
-
-  //김혜인 api
 
   return (
     <KeyboardAvoidingView
@@ -142,9 +154,7 @@ export default function RegisterScreen() {
                   </View>
 
                   <FlatList
-                    data={schools.filter((item) =>
-                      item.includes(schoolSearch.trim())
-                    )}
+                    data={schoolResults}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                       <Pressable
@@ -338,14 +348,8 @@ export default function RegisterScreen() {
 const BASE_HEIGHT = 48;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
+  content: { padding: 20, paddingBottom: 40 },
   title: {
     fontSize: 18,
     fontWeight: "bold",
@@ -359,11 +363,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 6,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   inputFlex: {
     flex: 1,
     height: BASE_HEIGHT,
@@ -381,32 +381,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 8,
   },
-  buttonSmallPressed: {
-    backgroundColor: "#ccc",
-  },
-  buttonText: {
-    fontSize: 15,
-    color: "#333",
-    fontWeight: "500",
-  },
-  buttonTextPressed: {
-    color: "#333",
-  },
-  hint: {
-    fontSize: 12,
-    color: "#999",
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  submitText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
+  buttonSmallPressed: { backgroundColor: "#ccc" },
+  buttonText: { fontSize: 15, color: "#333", fontWeight: "500" },
+  buttonTextPressed: { color: "#333" },
+  hint: { fontSize: 12, color: "#999", marginTop: 4, marginBottom: 12 },
+  submitText: { fontSize: 16, fontWeight: "600", color: "#333" },
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -415,12 +398,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flex: 0.6,
   },
-  modalCloseButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-  },
+  modalCloseButton: { position: "absolute", top: 12, right: 12, zIndex: 10 },
   modalSearchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -431,21 +409,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 16,
   },
-  modalSearchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingRight: 8,
-  },
-  schoolItem: {
-    paddingVertical: 12,
-  },
-  schoolItemText: {
-    fontSize: 17,
-    color: "#333",
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 14,
-    top: 13,
-  },
+  modalSearchInput: { flex: 1, fontSize: 16, paddingRight: 8 },
+  schoolItem: { paddingVertical: 12 },
+  schoolItemText: { fontSize: 17, color: "#333" },
+  eyeIcon: { position: "absolute", right: 14, top: 13 },
 });

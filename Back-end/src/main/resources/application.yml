@@ -1,7 +1,7 @@
 spring:
   datasource:
-    # url: jdbc:mariadb://localhost:${MYSQL_PORT:3306}/peticle_db
-    url: jdbc:mariadb://localhost:3306/peticle_db #김혜인테스트
+    #url: jdbc:mariadb://localhost:3306/peticle_db #김혜인
+    url: jdbc:mariadb://localhost:3306/peticle #박고운
     username: root
     password: 1234
     driver-class-name: org.mariadb.jdbc.Driver
