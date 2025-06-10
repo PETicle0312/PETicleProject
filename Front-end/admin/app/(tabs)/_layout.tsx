@@ -18,13 +18,13 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarStyle: { // 이 부분이 하단바를 시각적으로 숨깁니다.
+          display: 'none',
+          // iOS에서만 적용되던 position: 'absolute'는 display: 'none'으로 인해 효과가 없어지지만,
+          // 혹시 모를 경우를 대비하여 Platform.select를 사용하여 그대로 두거나 제거할 수 있습니다.
+          // 현재는 display: 'none'이 가장 강력하게 하단바를 숨깁니다.
+          ...(Platform.OS === 'ios' ? { position: 'absolute' } : {}),
+        },
       }}>
       <Tabs.Screen
         name="index"
