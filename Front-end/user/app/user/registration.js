@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Alert,
@@ -20,61 +20,73 @@ import {
 } from "react-native";
 
 export default function RegisterScreen() {
-
-const [userId, setUserId] = useState("");
-const [password, setPassword] = useState("");
-const [phone, setPhone] = useState("");  
-const [schoolName, setSchoolName] = useState("");
-const [studentNumber, setStudentNumber] = useState("");
-const [name, setName] = useState("");
-const [confirmPassword, setConfirmPassword] = useState("");
-
-
-const handleRegister = async () => {
-  if (password !== confirmPassword) {
-    Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
-    return; // 회원가입 요청 보내지 않음
-  }
-
-  try {
-    const response = await axios.post("http://172.30.1.38:8080/auth/register", {
-      userId,
-      password,
-      phone,
-      schoolName,
-      studentNumber,
-      name,
-      confirmPassword, //추가
-    });
-
-    console.log("✅ 회원가입 성공:", response.data);
-    Alert.alert("가입 성공", "회원가입이 완료되었습니다!", [
-      {
-        text: "확인",
-        onPress: () => router.replace("/user/login"),
-      },
-    ]);
-  } catch (error) {
-    console.error("❌ 회원가입 실패:", error);
-    Alert.alert("오류", "회원가입 중 문제가 발생했습니다.");
-  }
-};
-//위에 김혜인
-
   const router = useRouter();
+
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [studentNumber, setStudentNumber] = useState("");
+  const [name, setName] = useState("");
 
   const [modalVisible, setModalVisible] = useState(false);
   const [schoolSearch, setSchoolSearch] = useState("");
-  const [schools] = useState([
-    "중앙고등학교",
-    "경기고등학교",
-    "용산고등학교",
-    "무학여자고등학교",
-    "서울고등학교",
-  ]);
-
-  // 비밀번호 보기 토글
   const [showPassword, setShowPassword] = useState(false);
+
+  const [schoolResults, setSchoolResults] = useState([]);
+
+  // 학교 검색 API 호출
+  const fetchSchools = async (keyword) => {
+    try {
+      const response = await axios.get(
+        `http://172.30.1.38:8080/api/school/search?keyword=${keyword}`
+      );
+      setSchoolResults(response.data);
+    } catch (error) {
+      console.error("❌ 학교 검색 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (schoolSearch.trim().length > 0) {
+      fetchSchools(schoolSearch.trim());
+    } else {
+      setSchoolResults([]);
+    }
+  }, [schoolSearch]);
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://172.30.1.38:8080/auth/register",
+        {
+          userId,
+          password,
+          phone,
+          schoolName,
+          studentNumber,
+          name,
+        }
+      );
+
+      console.log("✅ 회원가입 성공:", response.data);
+      Alert.alert("가입 성공", "회원가입이 완료되었습니다!", [
+        {
+          text: "확인",
+          onPress: () => router.replace("/user/login"),
+        },
+      ]);
+    } catch (error) {
+      console.error("❌ 회원가입 실패:", error);
+      Alert.alert("오류", "회원가입 중 문제가 발생했습니다.");
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -86,12 +98,13 @@ const handleRegister = async () => {
           <ScrollView contentContainerStyle={styles.content}>
             <Text style={styles.title}>회원가입</Text>
 
-            {/* 학교 입력 필드 */}
+            {/* 학교 선택 */}
             <Text style={styles.label}>학교를 선택해 주세요</Text>
             <View style={styles.row}>
               <TextInput
                 style={styles.inputFlex}
-                placeholder="학교를 입력해 주세요"
+                value={schoolName}
+                editable={false}
               />
               <Pressable
                 onPress={() => setModalVisible(true)}
@@ -113,7 +126,7 @@ const handleRegister = async () => {
               </Pressable>
             </View>
 
-            {/*학교검색 모달창 */}
+            {/* 학교 검색 모달 */}
             <Modal
               visible={modalVisible}
               animationType="slide"
@@ -122,7 +135,6 @@ const handleRegister = async () => {
             >
               <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
-                  {/* 닫기 버튼 (오른쪽 위) */}
                   <Pressable
                     style={styles.modalCloseButton}
                     onPress={() => setModalVisible(false)}
@@ -130,7 +142,6 @@ const handleRegister = async () => {
                     <Ionicons name="close" size={28} color="#999" />
                   </Pressable>
 
-                  {/* 검색창 */}
                   <View style={styles.modalSearchRow}>
                     <TextInput
                       style={styles.modalSearchInput}
@@ -142,19 +153,15 @@ const handleRegister = async () => {
                     <Ionicons name="search" size={22} color="#999" />
                   </View>
 
-                  {/* 학교 리스트 */}
                   <FlatList
-                    data={schools.filter((item) =>
-                      item.includes(schoolSearch.trim())
-                    )}
+                    data={schoolResults}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                       <Pressable
                         style={styles.schoolItem}
                         onPress={() => {
-                          console.log("선택된 학교:", item);
+                          setSchoolName(item);
                           setModalVisible(false);
-                          setSchoolName(item); //김혜인
                         }}
                       >
                         <Text style={styles.schoolItemText}>{item}</Text>
@@ -165,14 +172,14 @@ const handleRegister = async () => {
               </View>
             </Modal>
 
-            {/* 학번 입력 필드 */}
+            {/* 학번 */}
             <Text style={styles.label}>학번을 입력해 주세요</Text>
             <View style={styles.row}>
               <TextInput
                 style={styles.inputFlex}
                 keyboardType="numeric"
-                value={studentNumber} //김혜인
-                onChangeText={setStudentNumber} //김혜인
+                value={studentNumber}
+                onChangeText={setStudentNumber}
               />
               <Pressable
                 onPress={() =>
@@ -194,16 +201,16 @@ const handleRegister = async () => {
                   </Text>
                 )}
               </Pressable>
-
-              {/*이름*/}
             </View>
+
+            {/* 이름 */}
             <Text style={styles.label}>이름</Text>
             <View style={styles.row}>
               <TextInput
                 style={styles.inputFlex}
                 placeholder="이름을 입력해 주세요"
-                value={name} //김혜인
-                onChangeText={setName} //김혜인
+                value={name}
+                onChangeText={setName}
               />
             </View>
 
@@ -212,10 +219,9 @@ const handleRegister = async () => {
             <View style={styles.row}>
               <TextInput
                 style={styles.inputFlex}
-                placeholder="휴대폰 번호"
                 keyboardType="phone-pad"
-                value={phone} //김혜인
-                onChangeText={setPhone} //김혜인
+                value={phone}
+                onChangeText={setPhone}
               />
               <Pressable
                 onPress={() =>
@@ -233,48 +239,11 @@ const handleRegister = async () => {
                       pressed && styles.buttonTextPressed,
                     ]}
                   >
-                    &ensp;&ensp;인증하기&nbsp;&ensp;
+                    인증하기
                   </Text>
                 )}
               </Pressable>
-              {/*<Pressable
-            onPress={() => Alert.alert("인증번호가 전송 되었습니다!")}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
-              >
-                인증번호받기
-              </Text>
-            )}
-          </Pressable> */}
             </View>
-            {/*<View style={styles.row}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="인증번호를 입력하세요"
-            keyboardType="number-pad"
-          />
-          <Pressable
-            onPress={() => Alert.alert("인증 확인", "인증이 완료되었습니다!")}
-            style={({ pressed }) => [
-              styles.buttonSmall,
-              pressed && styles.buttonSmallPressed,
-            ]}
-          >
-            {({ pressed }) => (
-              <Text
-                style={[styles.buttonText, pressed && styles.buttonTextPressed]}
-              >
-                &ensp;&ensp;인증하기&nbsp;&ensp;
-              </Text>
-            )}
-          </Pressable>
-        </View>*/}
 
             {/* 아이디 */}
             <Text style={styles.label}>아이디</Text>
@@ -282,25 +251,16 @@ const handleRegister = async () => {
               <TextInput
                 style={styles.inputFlex}
                 placeholder="아이디를 입력해 주세요"
-                value={userId} //김혜인
-                onChangeText={setUserId} //김혜인
+                value={userId}
+                onChangeText={setUserId}
               />
               <Pressable
                 onPress={() => {
-                  const inputId = "testuser"; // 실제론 TextInput의 state값
-                  const existingIds = ["testuser", "user123", "admin"]; // 예시 DB
-
-                  if (existingIds.includes(inputId)) {
+                  const existingIds = ["testuser", "user123", "admin"];
+                  if (existingIds.includes(userId)) {
                     Alert.alert(
                       "중복된 아이디",
-                      "이미 사용 중인 아이디입니다.",
-                      [
-                        {
-                          text: "확인",
-                          onPress: () => console.log("확인 눌림"),
-                        },
-                        { text: "취소", style: "cancel" },
-                      ]
+                      "이미 사용 중인 아이디입니다."
                     );
                   } else {
                     Alert.alert("사용 가능", "사용 가능한 아이디입니다.");
@@ -318,7 +278,7 @@ const handleRegister = async () => {
                       pressed && styles.buttonTextPressed,
                     ]}
                   >
-                    &ensp;&ensp;중복확인&nbsp;&ensp;
+                    중복확인
                   </Text>
                 )}
               </Pressable>
@@ -367,20 +327,6 @@ const handleRegister = async () => {
                 pressed && styles.buttonSmallPressed,
               ]}
             >
-            {/* <Pressable
-              onPress={() =>
-                Alert.alert("축하드립니다", "PETicle 가입이 완료되었습니다!", [
-                  {
-                    text: "확인",
-                    onPress: () => router.replace("/user/login"),
-                  },
-                ])
-              }
-              style={({ pressed }) => [
-                styles.buttonSmall,
-                pressed && styles.buttonSmallPressed,
-              ]}
-            > */}
               {({ pressed }) => (
                 <Text
                   style={[
@@ -402,14 +348,8 @@ const handleRegister = async () => {
 const BASE_HEIGHT = 48;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
+  content: { padding: 20, paddingBottom: 40 },
   title: {
     fontSize: 18,
     fontWeight: "bold",
@@ -423,19 +363,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 6,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  inputschool: {
-    flex: 0.73,
-    height: BASE_HEIGHT,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    fontSize: 14,
-  },
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   inputFlex: {
     flex: 1,
     height: BASE_HEIGHT,
@@ -445,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   buttonSmall: {
-    height: 48,
+    height: BASE_HEIGHT,
     paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: "#eee",
@@ -453,58 +381,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 8,
   },
-  buttonSmallPressed: {
-    backgroundColor: "#ccc",
-  },
-  buttonText: {
-    fontSize: 15,
-    color: "#333",
-    fontWeight: "500",
-  },
-  hint: {
-    fontSize: 12,
-    color: "#999",
-    marginTop: 4,
-    marginBottom: 12,
-  },
-
-  buttonTextPressed: {
-    color: "#333",
-  },
-  submitButton: {
-    height: BASE_HEIGHT,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  submitText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-
-  /* 학교 모달(바텀시트) */
+  buttonSmallPressed: { backgroundColor: "#ccc" },
+  buttonText: { fontSize: 15, color: "#333", fontWeight: "500" },
+  buttonTextPressed: { color: "#333" },
+  hint: { fontSize: 12, color: "#999", marginTop: 4, marginBottom: 12 },
+  submitText: { fontSize: 16, fontWeight: "600", color: "#333" },
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingHorizontal: 20,
     padding: 20,
     flex: 0.6,
   },
-  modalCloseButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-  },
+  modalCloseButton: { position: "absolute", top: 12, right: 12, zIndex: 10 },
   modalSearchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -515,21 +409,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 16,
   },
-  modalSearchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingRight: 8,
-  },
-  schoolItem: {
-    paddingVertical: 12,
-  },
-  schoolItemText: {
-    fontSize: 17,
-    color: "#333",
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 14,
-    top: 13,
-  },
+  modalSearchInput: { flex: 1, fontSize: 16, paddingRight: 8 },
+  schoolItem: { paddingVertical: 12 },
+  schoolItemText: { fontSize: 17, color: "#333" },
+  eyeIcon: { position: "absolute", right: 14, top: 13 },
 });

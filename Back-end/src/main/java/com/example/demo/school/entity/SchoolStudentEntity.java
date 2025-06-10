@@ -1,30 +1,32 @@
 package com.example.demo.school.entity;
 
-import jakarta.persistence.*; // JPA 관련 모든 어노테이션
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "school_students")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SchoolStudentEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long schoolStudentId;
+    @Column(name = "student_id")
+    private Long studentId;
 
-    private String name;
+    @Column(name = "student_name", nullable = false)
+    private String studentName;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
-    @Column(name = "student_number")
+    @Column(name = "student_number", nullable = false)
     private String studentNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "school_id")
+    @Column(name = "student_phone_number", nullable = false)
+    private String studentPhoneNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id", nullable = false)
     private SchoolEntity school;
 }
