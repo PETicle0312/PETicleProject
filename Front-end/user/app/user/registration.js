@@ -282,6 +282,18 @@ export default function RegisterScreen() {
               />
               <Pressable
                 onPress={() => {
+                  // 아이디가 6자 이상이고, 영문자, 숫자, 특수문자가 포함되어 있는지 체크
+                  const idPattern = /^[a-zA-Z0-9]{6,12}$/;
+
+                  // 규칙에 맞지 않으면 경고 메시지 표시
+                  if (!idPattern.test(userId)) {
+                    Alert.alert(
+                      "잘못된 아이디",
+                      "아이디는 6-12자의 영문, 숫자만 사용 가능합니다."
+                    );
+                    return;
+                  }
+
                   const existingIds = ["testuser", "user123", "admin"];
                   if (existingIds.includes(userId)) {
                     Alert.alert(
