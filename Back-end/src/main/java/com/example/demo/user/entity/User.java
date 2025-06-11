@@ -1,6 +1,10 @@
 package com.example.demo.user.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.demo.school.entity.SchoolEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,35 +19,34 @@ public class User {
     @Column(name = "user_id", length = 50)
     private String userId;
 
-    @Column(name = "character_name")
+    @Column(name = "character_name",nullable = false)
     private String charName;
 
     @Column(name = "image_url")
     private String imageUrl;
 
     @Column(name = "last_played")
-    private String lastPlayed;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastPlayed;
 
-    @Column(name = "name")
+    @Column(name = "name",nullable = false)
     private String name;
 
-    @Column(name = "password")
+    @Column(name = "password",nullable = false)
     private String password;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number",nullable = false, unique = true, length = 13)
     private String phone;
 
     @Column(name = "register_date")
-    private String registerDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime registerDate;
 
     @Column(name = "total_lives")
     private int totalLives;
 
     @Column(name = "student_number")
     private String studentNumber; 
-
-    @Column(name = "score")
-    private int score;             
 
     @ManyToOne
     @JoinColumn(name = "school_id")

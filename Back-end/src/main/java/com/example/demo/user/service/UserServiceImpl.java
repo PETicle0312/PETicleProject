@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserService {
         user.setSchool(school);         // 외래키 연결
         user.setTotalLives(3);          // 기본값 설정
         user.setStudentNumber(dto.getStudentNumber()); // user 엔티티에 있어야 함
-        user.setScore(0);                             // 기본값 설정
         
         userRepository.save(user);
         return "회원가입 성공";

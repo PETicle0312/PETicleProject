@@ -1,5 +1,9 @@
 package com.example.demo.admin.entity;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,5 +31,6 @@ public class Admin {
     private String admPassword;
 
     @Column(name = "created_at")
-    private String createdAt;  // 생성일 (yyyy-MM-dd HH:mm:ss)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;  
 }

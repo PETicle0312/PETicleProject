@@ -1,6 +1,7 @@
 package com.example.demo.game.entity;
 
 import com.example.demo.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,15 +21,12 @@ public class GameSession {
     @Column(name = "session_id")
     private Long sessionId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
-
     @Column( nullable = false)
     private int score;
 
     @Column(name="play_time", nullable = false)
-    private String playTime; // yyyy-MM-dd HH:mm:ss 형태 추천
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime playTime; // yyyy-MM-dd HH:mm:ss 형태 추천
 
        // 필요시 생성자에 기본값 설정
     public void addScore(int amount) {
@@ -36,6 +34,11 @@ public class GameSession {
     }
 
     @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User userId;
 
 }

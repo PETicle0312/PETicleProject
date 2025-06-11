@@ -23,7 +23,7 @@ public class SchoolStudentEntity {
     @Column(name = "student_number", nullable = false)
     private String studentNumber;
 
-    @Column(name = "student_phone_number", nullable = false)
+    @Column(name = "student_phone_number", nullable = false, unique = true, length = 13)
     private String studentPhoneNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)

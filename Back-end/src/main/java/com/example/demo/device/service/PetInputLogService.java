@@ -34,7 +34,6 @@ public class PetInputLogService {
         PetInputLog log = PetInputLog.builder()
                 .userId(user)
                 .school(user.getSchool())
-                .studentNumber(dto.getStudentNumber())
                 .device(device)
                 .inputCount(dto.getInputCount())
                 .inputTime(dto.getInputTime() != null ? dto.getInputTime() : LocalDateTime.now())

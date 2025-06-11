@@ -1,6 +1,9 @@
 package com.example.demo.device.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.demo.school.entity.SchoolEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,7 +29,8 @@ public class Device {
     private int capacity;
 
     @Column(name = "last_update")
-    private String lastUpdate; // yyyy-MM-dd HH:mm:ss
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastUpdate; // yyyy-MM-dd HH:mm:ss
 
     private Double latitude; // 위도
 

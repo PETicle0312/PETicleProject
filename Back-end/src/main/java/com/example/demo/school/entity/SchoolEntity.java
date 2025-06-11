@@ -12,8 +12,13 @@ import lombok.*;
 public class SchoolEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "school_id")
     private Long id;
 
-    @Column
+
+    @Column(name = "school_name", nullable = false)
     private String schoolName;
+
+    @Column(name = "region")
+    private String region;
 }

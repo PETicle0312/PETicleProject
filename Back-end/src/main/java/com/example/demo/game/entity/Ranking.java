@@ -1,6 +1,10 @@
 package com.example.demo.game.entity;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.example.demo.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,19 +23,21 @@ public class Ranking {
     @Column(name="ranking_id")
     private Long rankingId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
-
     @Column(name = "period_start",nullable = false)
-    private String periodStart;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime periodStart;
 
     @Column(name = "period_end", nullable = false)
-    private String periodEnd;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime periodEnd;
 
     @Column(name = "rank_position",nullable = false)
     private int rankPosition;
 
-    @Column(name = "higest_score",nullable = false)
+    @Column(name = "highest_score",nullable = false)
     private int highestScore;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User userId;
 }
