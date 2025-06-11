@@ -35,12 +35,13 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [schoolResults, setSchoolResults] = useState([]);
+  const [schoolId, setSchoolId] = useState(null); // schoolId 저장
 
   // 학교 검색 API 호출
   const fetchSchools = async (keyword) => {
     try {
       const response = await axios.get(
-        `http://172.29.49.44:8080/api/school/search?keyword=${keyword}` /*포트변경*/
+        `http://220.86.166.180:8080/api/school/search?keyword=${keyword}`
       );
       setSchoolResults(response.data);
     } catch (error) {
@@ -48,17 +49,14 @@ export default function RegisterScreen() {
     }
   };
 
-  // 학번 API 호출
+  // 학번 인증 API 호출
   const verifyStudent = async () => {
     console.log("인증 요청 →", { studentNumber });
     try {
       const response = await axios.post(
-        "http://172.29.49.44:8080/api/school/verify" /*포트변경*/,
-        {
-          studentNumber,
-        }
+        "http://220.86.166.180:8080/api/school/verify",
+        { studentNumber }
       );
-
       Alert.alert("인증 성공", response.data);
     } catch (error) {
       console.error("❌ 학번 인증 실패:", error);
@@ -66,23 +64,22 @@ export default function RegisterScreen() {
     }
   };
 
-  //휴대폰 형식 여부 인증
+  // 휴대폰 형식 인증
   const verifyPhoneNumber = async () => {
     console.log(phone);
-
     try {
       const response = await axios.post(
-        "http://172.29.49.44:8080/users/verify-phone" /*포트변경*/,
-        {
-          phoneNumber: phone,
-        }
+        "http://220.86.166.180:8080/users/verify-phone",
+        { phoneNumber: phone }
       );
-      Alert.alert("인증 성공", response.data); // ex: "휴대폰 번호 인증 성공"
+      Alert.alert("인증 성공", response.data);
     } catch (error) {
       console.error("❌ 휴대폰 인증 실패:", error);
       Alert.alert("인증 실패", "휴대폰 번호 형식이 올바르지 않습니다.");
     }
   };
+
+  // 학교 검색이 있을 때마다 API 호출
   useEffect(() => {
     if (schoolSearch.trim().length > 0) {
       fetchSchools(schoolSearch.trim());
@@ -91,6 +88,7 @@ export default function RegisterScreen() {
     }
   }, [schoolSearch]);
 
+  // 회원가입 처리
   const handleRegister = async () => {
     if (password !== confirmPassword) {
       Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
@@ -99,7 +97,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.29.49.44:8080/users/register" /*포트변경*/,
+        "http://220.86.166.180:8080/users/register",
         {
           userId,
           password,
@@ -109,13 +107,9 @@ export default function RegisterScreen() {
           name,
         }
       );
-
       console.log("✅ 회원가입 성공:", response.data);
       Alert.alert("가입 성공", "회원가입이 완료되었습니다!", [
-        {
-          text: "확인",
-          onPress: () => router.replace("/user/login"),
-        },
+        { text: "확인", onPress: () => router.replace("/user/login") },
       ]);
     } catch (error) {
       console.error("❌ 회원가입 실패:", error);
@@ -196,6 +190,7 @@ export default function RegisterScreen() {
                         style={styles.schoolItem}
                         onPress={() => {
                           setSchoolName(item);
+                          setSchoolId(item.id); // schoolId 저장
                           setModalVisible(false);
                         }}
                       >
