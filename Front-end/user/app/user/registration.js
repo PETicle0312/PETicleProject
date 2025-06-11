@@ -40,7 +40,7 @@ export default function RegisterScreen() {
   const fetchSchools = async (keyword) => {
     try {
       const response = await axios.get(
-        `http://172.30.1.41:8080/api/school/search?keyword=${keyword}`
+        `http://172.29.49.44:8080/api/school/search?keyword=${keyword}` /*포트변경*/
       );
       setSchoolResults(response.data);
     } catch (error) {
@@ -53,11 +53,12 @@ export default function RegisterScreen() {
     console.log("인증 요청 →", { studentNumber });
     try {
       const response = await axios.post(
-        "http://172.30.1.41:8080/api/school/verify",
+        "http://172.29.49.44:8080/api/school/verify" /*포트변경*/,
         {
           studentNumber,
         }
       );
+
       Alert.alert("인증 성공", response.data);
     } catch (error) {
       console.error("❌ 학번 인증 실패:", error);
@@ -71,7 +72,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.30.1.41:8080/users/verify-phone",
+        "http://172.29.49.44:8080/users/verify-phone" /*포트변경*/,
         {
           phoneNumber: phone,
         }
@@ -82,7 +83,6 @@ export default function RegisterScreen() {
       Alert.alert("인증 실패", "휴대폰 번호 형식이 올바르지 않습니다.");
     }
   };
-
   useEffect(() => {
     if (schoolSearch.trim().length > 0) {
       fetchSchools(schoolSearch.trim());
@@ -99,7 +99,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.30.1.41:8080/users/register",
+        "http://172.29.49.44:8080/users/register" /*포트변경*/,
         {
           userId,
           password,
