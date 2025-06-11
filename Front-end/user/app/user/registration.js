@@ -98,7 +98,7 @@ export default function RegisterScreen() {
           userId,
           password,
           phone,
-          schoolName,
+          schoolId,
           studentNumber,
           name,
         }
