@@ -18,7 +18,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    
+
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserRegisterDto dto) {
         return ResponseEntity.ok(userService.registerUser(dto));
@@ -48,6 +48,14 @@ public class UserController {
         }
         return ResponseEntity.ok("휴대폰 번호 인증 성공");
     }
-    
+
+    // 아이디 중복 확인
+    @PostMapping("/check-id")
+    public ResponseEntity<String> checkId(@RequestBody UserIdDto dto) {
+        if (userService.existsByUserId(dto.getUserId())) {
+            return ResponseEntity.badRequest().body("이미 사용 중인 아이디입니다.");
+        }
+        return ResponseEntity.ok("사용 가능한 아이디입니다.");
+    }
 
 }

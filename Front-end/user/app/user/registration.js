@@ -88,13 +88,44 @@ export default function RegisterScreen() {
     }
   }, [schoolSearch]);
 
-  // 회원가입 처리
+  // 아이디 중복 확인 함수
+  const checkIdDuplicate = async () => {
+    const idPattern = /^[a-zA-Z0-9]{6,12}$/;
+    if (!idPattern.test(userId)) {
+      Alert.alert(
+        "잘못된 아이디",
+        "아이디는 6-12자의 영문, 숫자만 사용 가능합니다."
+      );
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://220.86.166.180:8080/users/check-id", // 아이디 중복 확인 API URL
+        { userId }
+      );
+
+      if (response.data === "사용 가능한 아이디입니다.") {
+        console.log("✅ 아이디 중복 확인 성공:", response.data);
+        Alert.alert("아이디 확인", "사용 가능한 아이디입니다.");
+      } else {
+        Alert.alert("아이디 중복", "이미 사용 중인 아이디입니다.");
+      }
+    } catch (error) {
+      console.error("❌ 아이디 확인 실패:", error);
+      Alert.alert("아이디 확인 실패", "아이디 확인 중 문제가 발생했습니다.");
+    }
+  };
+
+  // 회원가입 처리 함수
   const handleRegister = async () => {
+    // 비밀번호 확인
     if (password !== confirmPassword) {
       Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
       return;
     }
 
+    // API 호출
     try {
       const response = await axios.post(
         "http://220.86.166.180:8080/users/register",
@@ -280,30 +311,9 @@ export default function RegisterScreen() {
                 value={userId}
                 onChangeText={setUserId}
               />
+
               <Pressable
-                onPress={() => {
-                  // 아이디가 6자 이상이고, 영문자, 숫자, 특수문자가 포함되어 있는지 체크
-                  const idPattern = /^[a-zA-Z0-9]{6,12}$/;
-
-                  // 규칙에 맞지 않으면 경고 메시지 표시
-                  if (!idPattern.test(userId)) {
-                    Alert.alert(
-                      "잘못된 아이디",
-                      "아이디는 6-12자의 영문, 숫자만 사용 가능합니다."
-                    );
-                    return;
-                  }
-
-                  const existingIds = ["testuser", "user123", "admin"];
-                  if (existingIds.includes(userId)) {
-                    Alert.alert(
-                      "중복된 아이디",
-                      "이미 사용 중인 아이디입니다."
-                    );
-                  } else {
-                    Alert.alert("사용 가능", "사용 가능한 아이디입니다.");
-                  }
-                }}
+                onPress={checkIdDuplicate} // 여기에 아이디 중복 확인 함수 연결
                 style={({ pressed }) => [
                   styles.buttonSmall,
                   pressed && styles.buttonSmallPressed,
