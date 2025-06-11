@@ -11,22 +11,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-public class SchoolService {
+// @RequiredArgsConstructor
+// public class SchoolService {
 
-    private final SchoolRepository schoolRepository;
-    private final SchoolStudentRepository studentRepository;
+//     private final SchoolRepository schoolRepository;
+//     private final SchoolStudentRepository studentRepository;
 
-    public List<String> searchSchool(String keyword) {
-        return schoolRepository.findBySchoolNameContaining(keyword)
-                .stream()
-                .map(s -> s.getSchoolName())
-                .collect(Collectors.toList());
-    }
+//     public List<String> searchSchool(String keyword) {
+//         return schoolRepository.findBySchoolNameContaining(keyword)
+//                 .stream()
+//                 .map(s -> s.getSchoolName())
+//                 .collect(Collectors.toList());
+//     }
 
-    public boolean verifyStudent(StudentVerifyDto dto) {
-        return studentRepository.findByStudentNumberAndSchool_SchoolName(dto.getStudentNumber(), dto.getSchoolName())
-                .map(student -> student.getStudentName().equals(dto.getStudentName()))
-                .orElse(false);
-    }
+//     public boolean verifyStudent(StudentVerifyDto dto) {
+//         return studentRepository.findByStudentNumberAndSchool_SchoolName(dto.getStudentNumber(), dto.getSchoolName())
+//                 .map(student -> student.getStudentName().equals(dto.getStudentName()))
+//                 .orElse(false);
+//     }
+// }
+public interface SchoolService {
+    List<String> searchSchool(String keyword);
+    boolean verifyStudent(StudentVerifyDto dto);
 }

@@ -40,13 +40,42 @@ export default function RegisterScreen() {
   const fetchSchools = async (keyword) => {
     try {
       const response = await axios.get(
-        `http://172.30.1.38:8080/api/school/search?keyword=${keyword}`
+        `http://172.30.1.41:8080/api/school/search?keyword=${keyword}`
       );
       setSchoolResults(response.data);
     } catch (error) {
       console.error("❌ 학교 검색 실패:", error);
     }
-  };
+  };  
+
+  // 학번 API 호출
+  const verifyStudent = async () => {
+     console.log("인증 요청 →", { studentNumber });  // ✅ 이 위치에 넣으세요
+    try {
+      const response = await axios.post("http://172.30.1.41:8080/api/school/verify", {      
+        studentNumber,
+      });
+      Alert.alert("인증 성공", response.data);
+    } catch (error) {
+      console.error("❌ 학번 인증 실패:", error);
+      Alert.alert("인증 실패", "입력한 정보가 올바르지 않습니다.");
+    }
+  };  
+
+  //휴대폰 형식 여부 인증
+  const verifyPhoneNumber = async () => {
+    console.log(phone)
+
+  try {
+    const response = await axios.post("http://172.30.1.41:8080/users/verify-phone", {
+      phoneNumber: phone,
+    });
+    Alert.alert("인증 성공", response.data); // ex: "휴대폰 번호 인증 성공"
+  } catch (error) {
+    console.error("❌ 휴대폰 인증 실패:", error);
+    Alert.alert("인증 실패", "휴대폰 번호 형식이 올바르지 않습니다.");
+  }
+};
 
   useEffect(() => {
     if (schoolSearch.trim().length > 0) {
@@ -64,7 +93,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.30.1.38:8080/auth/register",
+        "http://172.30.1.41:8080/users/register",
         {
           userId,
           password,
@@ -182,9 +211,7 @@ export default function RegisterScreen() {
                 onChangeText={setStudentNumber}
               />
               <Pressable
-                onPress={() =>
-                  Alert.alert("학번 확인", "학번이 인증되었습니다!")
-                }
+                onPress={verifyStudent}
                 style={({ pressed }) => [
                   styles.buttonSmall,
                   pressed && styles.buttonSmallPressed,
@@ -201,6 +228,8 @@ export default function RegisterScreen() {
                   </Text>
                 )}
               </Pressable>
+
+
             </View>
 
             {/* 이름 */}
@@ -224,9 +253,7 @@ export default function RegisterScreen() {
                 onChangeText={setPhone}
               />
               <Pressable
-                onPress={() =>
-                  Alert.alert("인증 확인", "인증이 완료되었습니다!")
-                }
+                onPress={verifyPhoneNumber} 
                 style={({ pressed }) => [
                   styles.buttonSmall,
                   pressed && styles.buttonSmallPressed,
