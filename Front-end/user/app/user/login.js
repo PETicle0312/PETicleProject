@@ -19,10 +19,13 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://172.30.1.38:8080/auth/login", {
-        userId,
-        password,
-      });
+      const response = await axios.post(
+        "http://220.86.166.180:8080/auth/login",
+        {
+          userId,
+          password,
+        }
+      );
 
       if (response.data === "로그인 성공") {
         console.log("✅ 로그인 성공:", response.data);
@@ -80,7 +83,7 @@ export default function LoginScreen() {
               styles.button,
               pressed && styles.buttonPressed,
             ]}
-            onPress={() => router.push("/user/gamemain")}
+            onPress={handleLogin}
           >
             <Text style={styles.buttonText}>로그인</Text>
           </Pressable>
