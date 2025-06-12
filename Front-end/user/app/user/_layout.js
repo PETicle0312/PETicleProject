@@ -1,4 +1,6 @@
-import { Slot, Stack } from "expo-router";
+// app/user/_layout.js
+
+import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
@@ -8,8 +10,6 @@ export default function Layout() {
         gestureEnabled: true,
         headerShown: false,
       }}
-    >
-      <Slot />
-    </Stack>
+    />
   );
 }

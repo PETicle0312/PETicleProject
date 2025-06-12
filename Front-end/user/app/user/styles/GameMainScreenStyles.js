@@ -2,7 +2,7 @@ import { Dimensions, StyleSheet } from "react-native";
 
 const screenHeight = Dimensions.get("window").height;
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFE066",
@@ -269,3 +269,4 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+export default styles;
