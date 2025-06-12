@@ -20,10 +20,10 @@ public class Ranking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="ranking_id")
+    @Column(name = "ranking_id")
     private Long rankingId;
 
-    @Column(name = "period_start",nullable = false)
+    @Column(name = "period_start", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime periodStart;
 
@@ -31,10 +31,10 @@ public class Ranking {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime periodEnd;
 
-    @Column(name = "rank_position",nullable = false)
+    @Column(name = "rank_position", nullable = false)
     private int rankPosition;
 
-    @Column(name = "highest_score",nullable = false)
+    @Column(name = "highest_score", nullable = false)
     private int highestScore;
 
     @ManyToOne

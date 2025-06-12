@@ -3,14 +3,14 @@ spring:
     #url: jdbc:mariadb://localhost:3306/peticle #김혜인,윤정서
     url: jdbc:mariadb://localhost:3306/peticle #박고운
     username: root
-    #password: 1234 #김혜인,박고운
-    password: 1209 #윤정서
+    password: 1234 #김혜인,박고운
+    #password:  1209 #윤정서
     driver-class-name: org.mariadb.jdbc.Driver
 
   jpa:
     generate-ddl: true
     hibernate:
-      ddl-auto: update # 최초 create도 가능, 이후에는 update 권장
+      ddl-auto: validate # 최초 create도 가능, 이후에는 update 권장
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
@@ -19,4 +19,3 @@ spring:
 
 server:
   port: 8080
-  

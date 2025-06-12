@@ -20,8 +20,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserRegisterDto dto) {
-        return ResponseEntity.ok(userService.registerUser(dto));
+    public String registerUser(@RequestBody UserRegisterDto dto) {
+        if (dto == null) {
+            System.out.println("❌ DTO가 null입니다!");
+            return "입력된 데이터가 잘못되었습니다.";
+        }
+
+        System.out.println("✅ DTO 확인: " + dto.toString());
+        return userService.registerUser(dto); // 이거 꼭 있어야 백엔드 동작함
     }
 
     @PostMapping("/login")

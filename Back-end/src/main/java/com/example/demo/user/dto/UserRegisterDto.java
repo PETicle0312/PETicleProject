@@ -6,9 +6,12 @@ import lombok.Data;
 public class UserRegisterDto {
     private String userId;
     private String password;
-    private String confirmPassword; // 비밀번호 확인
-    private String phone;         
+    private String confirmPassword;
     private String name;
+    private String phone;
     private String studentNumber;
-    private String schoolId; // schoolId로 받아서 schoolRepository로 조회
+    private String schoolId;
+    private String charName;
+    private String imageUrl;
+
 }

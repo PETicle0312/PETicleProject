@@ -43,6 +43,7 @@ export default function RegisterScreen() {
       const response = await axios.get(
         `http://220.86.166.180:8080/api/school/search?keyword=${keyword}`
       );
+      console.log("📦 학교 API 응답:", response.data); // ✅ 이 줄 추가
       setSchoolResults(response.data);
     } catch (error) {
       console.error("❌ 학교 검색 실패:", error);
@@ -120,10 +121,16 @@ export default function RegisterScreen() {
   // 회원가입 처리 함수
   const handleRegister = async () => {
     // 비밀번호 확인
+    console.log("✅ 비밀번호:", password); // 비밀번호 출력
+    console.log("✅ 비밀번호 확인:", confirmPassword); // 비밀번호 확인 출력
+
     if (password !== confirmPassword) {
       Alert.alert("비밀번호 불일치", "비밀번호가 일치하지 않습니다.");
       return;
     }
+
+    // 🔥 schoolId 확인 로그
+    console.log("🔥 최종 등록 schoolId:", schoolId);
 
     // API 호출
     try {
@@ -132,10 +139,13 @@ export default function RegisterScreen() {
         {
           userId,
           password,
+          confirmPassword, // ← 이 필드 꼭 들어가야 함!
           phone,
-          schoolId,
-          studentNumber,
           name,
+          studentNumber,
+          schoolId,
+          charName: "default",
+          imageUrl: "",
         }
       );
       console.log("✅ 회원가입 성공:", response.data);
@@ -220,12 +230,16 @@ export default function RegisterScreen() {
                       <Pressable
                         style={styles.schoolItem}
                         onPress={() => {
-                          setSchoolName(item);
-                          setSchoolId(item.id); // schoolId 저장
+                          console.log("✅ 선택한 학교 item:", item);
+                          setSchoolName(item.schoolName); // 사용자에게 보여줄 이름
+                          setSchoolId(item.schoolId); // 백엔드에 보낼 schoolId
                           setModalVisible(false);
                         }}
                       >
-                        <Text style={styles.schoolItemText}>{item}</Text>
+                        <Text style={styles.schoolItemText}>
+                          {" "}
+                          {item.schoolName}
+                        </Text>
                       </Pressable>
                     )}
                   />
