@@ -20,7 +20,7 @@ public class SchoolStudentEntity {
     @Column(name = "student_name", nullable = false)
     private String studentName;
 
-    @Column(name = "student_number", nullable = false)
+    @Column(name = "student_number", nullable = false, unique = true)
     private String studentNumber;
 
     @Column(name = "student_phone_number", nullable = false, unique = true, length = 13)

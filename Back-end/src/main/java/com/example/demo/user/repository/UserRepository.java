@@ -10,9 +10,13 @@ public interface UserRepository extends JpaRepository<User, String> {
     // 로그인: userId로 조회
     Optional<User> findByUserId(String userId);
 
+
     // 아이디 중복 확인
     boolean existsByUserId(String userId);
 
+
+    //디바이스에서 학번으로 사용자 조회
+    Optional<User> findByStudentNumber(String studentNumber);
     User findByUserIdAndPassword(String userId, String password);
 
 }

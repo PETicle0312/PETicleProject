@@ -1,5 +1,7 @@
 package com.example.demo.device.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +19,17 @@ public class PetInputLogController {
 
     @PostMapping("/input")
     public ResponseEntity<String> inputPet(@RequestBody PetInputLogDto dto) {
-        boolean result = petInputLogService.saveInputLog(dto);
-        return result
-            ? ResponseEntity.ok("입력 로그 저장 성공")
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유저 또는 디바이스 없음");
+        String result = petInputLogService.saveInputLog(dto);
+
+        if ("success".equals(result)) {
+            return ResponseEntity.ok("입력 로그 저장 성공");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
     }
+    @GetMapping("/logs/{userId}")
+    public ResponseEntity<List<PetInputLogDto>> getUserLogs(@PathVariable String userId) {
+    List<PetInputLogDto> logs = petInputLogService.getLogsByUserId(userId);
+    return ResponseEntity.ok(logs);
+}
 }
