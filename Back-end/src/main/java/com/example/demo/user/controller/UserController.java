@@ -32,7 +32,9 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto dto) {
+        System.out.println("Controller 진입");
         return ResponseEntity.ok(userService.login(dto));
+
     }
 
     @GetMapping("/ranking")

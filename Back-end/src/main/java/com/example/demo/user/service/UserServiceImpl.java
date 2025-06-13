@@ -5,9 +5,13 @@ import com.example.demo.user.entity.User;
 import com.example.demo.school.entity.SchoolEntity;
 import com.example.demo.school.repository.SchoolRepository;
 import com.example.demo.user.repository.UserRepository;
+import com.example.demo.device.repository.*;
+import com.example.demo.game.repository.RankingRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +22,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final SchoolRepository schoolRepository;
+    private final PetInputLogRepository petInputLogRepository;
+    private final RankingRepository rankingRepository;
 
     @Override
     public boolean existsByUserId(String userId) {
@@ -80,18 +86,37 @@ public class UserServiceImpl implements UserService {
         // 아이디로 사용자 찾기
         User user = userRepository.findByUserId(dto.getUserId()).orElse(null);
 
+
         // 사용자가 없으면 로그인 실패
         if (user == null) {
             return new LoginResponseDto("아이디가 존재하지 않습니다.", false);
         }
-
+        System.out.println("🔐 입력된 비밀번호: [" + dto.getPassword() + "]");
+        System.out.println("🔐 DB의 비밀번호: [" + user.getPassword() + "]");
+        System.out.println("✔️ 일치 여부: " + user.getPassword().equals(dto.getPassword()));
         // 비밀번호 일치 여부 확인
         if (!user.getPassword().equals(dto.getPassword())) {
             return new LoginResponseDto("비밀번호가 일치하지 않습니다.", false);
         }
 
+        // 총 수거량 조회 (PetInputLog 기준), 점수 조회
+        int recycleCount = petInputLogRepository.countByUserId(user); 
+        Integer highestScore = rankingRepository.findHighestScoreByUserId(user); 
+        if (highestScore == null) highestScore = 0;
+
         // 로그인 성공
-        return new LoginResponseDto("로그인 성공", true);
+        return new LoginResponseDto(
+            "로그인 성공", 
+            true,
+            user.getUserId(),
+            user.getCharName(),
+            user.getTotalLives(),
+            recycleCount,
+            highestScore
+        
+        );
+
+
     }
 
     @Override

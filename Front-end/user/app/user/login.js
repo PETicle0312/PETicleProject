@@ -18,28 +18,52 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const handleLogin = async () => {
+
+    console.log("📦 로그인 요청 데이터:", { userId, password });
     try {
       const response = await axios.post(
-        "http://220.86.166.180:8080/auth/login",
+        "http://192.168.219.106:8080/users/login",
         {
           userId,
           password,
         }
       );
 
-      if (response.data === "로그인 성공") {
-        console.log("✅ 로그인 성공:", response.data);
-        Alert.alert("로그인 성공", `환영합니다!`);
-        router.replace("/user/gamemain");
-      } else {
-        console.log("✅ 로그인 실패:", response.data);
-        Alert.alert("로그인 실패", response.data); // 서버 응답 메시지
-      }
-    } catch (error) {
-      console.error("❌ 로그인 실패:", error.response?.data || error.message);
-      Alert.alert("로그인 실패", "아이디 또는 비밀번호를 확인해 주세요.");
+    const data = response.data;
+
+    if (data.success) {
+      console.log("✅ 로그인 성공:", data);
+
+      const {
+        userId,
+        characterName,
+        lives,
+        totalRecycleCount,
+        highestScore,
+      } = data;
+
+      // 로그인 성공 → 게임 메인 페이지로 이동 + 데이터 전달
+      router.replace({
+        pathname: "/user/gamemain",
+        params: {
+          userId,
+          characterName,
+          lives,
+          recycleCount: totalRecycleCount,
+          highestScore,
+        },
+      });
+
+      Alert.alert("로그인 성공", `환영합니다, ${userId}님!`);
+    } else {
+      console.log("❌ 로그인 실패:", data.message);
+      Alert.alert("로그인 실패", data.message);
     }
-  };
+  } catch (error) {
+    console.error("❌ 로그인 에러:", error.response?.data || error.message);
+    Alert.alert("로그인 실패", "아이디 또는 비밀번호를 확인해 주세요.");
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>

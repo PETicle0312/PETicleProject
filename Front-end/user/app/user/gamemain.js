@@ -4,16 +4,25 @@ import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import styles from "./styles/GameMainScreenStyles";
 import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
-const userId = "2300314";
+import { useRoute } from '@react-navigation/native';
+
 
 export default function GameMainScreen() {
+  const route = useRoute();
+  const {
+    userId = "guest",
+    characterName = "blue",
+    lives: initialLives = 3,
+    recycleCount = 0,
+    highestScore = 0,
+  } = route.params || {};
   const [modalType, setModalType] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState("blue");
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(0);//현재 목숨숨
-  const [score, setScore] = useState(0);
-  const [totalRecycleCount, setTotalRecycleCount] = useState(0);
-  const [initialLives, setInitialLives] = useState(0);//초기 목숨
+  const [lives, setLives] = useState(initialLives);//현재 목숨숨
+  const [score, setScore] = useState(highestScore);
+  const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
+
 
 
 
@@ -29,13 +38,12 @@ export default function GameMainScreen() {
   useEffect(() => {
   const fetchRecycleData = async () => {
     try {
-      const userId = "2300314";
 
       // ✅ 요청 보내기 전 확인 로그!
       console.log("📡 재활용 내역 요청 보냄:", userId);
 
       const response = await axios.get(
-        `http://172.18.35.133:8080/api/device/logs/${userId}`,
+        `http://192.168.219.106:8080/api/device/logs/${userId}`,
         { timeout: 20000 }
       );
 
@@ -62,8 +70,10 @@ export default function GameMainScreen() {
 }, []);
 
 useEffect(() => {
-  setLives(totalRecycleCount);  // 페트병 1개 = 목숨 1개
-}, [totalRecycleCount]);
+  const baseLives = Number(route.params?.lives ?? 3); // ← 강제 숫자 변환!
+  const earned = Number(totalRecycleCount); // ← 이것도 숫자 변환!
+  setLives(baseLives + earned);
+}, [totalRecycleCount,route.params?.lives]);
 
 
   const renderItem = ({ item }) => (
@@ -143,7 +153,7 @@ useEffect(() => {
               source={require("../../assets/images/greenhead.png")}
               style={styles.profileImage}
             />
-            <Text style={styles.profileText}>peticle0312 님</Text>
+            <Text style={styles.profileText}>{userId}님</Text>
           </View>
         </Pressable>
 

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import com.example.demo.device.dto.PetInputLogDto;
 import com.example.demo.device.service.PetInputLogService;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/device")
 @RequiredArgsConstructor
