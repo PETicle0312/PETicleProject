@@ -46,6 +46,11 @@ public class PetInputLogService {
                 .build();
 
         petInputLogRepository.save(log);
+        
+        int currentLives = user.getTotalLives();
+        user.setTotalLives(currentLives + dto.getInputCount()); // PET 개수만큼 목숨 증가
+        userRepository.save(user); // 변경 저장
+
         return "success";
     }
 
