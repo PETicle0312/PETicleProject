@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import styles from "./styles/GameMainScreenStyles";
 import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
-import { useRoute } from '@react-navigation/native';
-
+import { useRoute } from "@react-navigation/native";
 
 export default function GameMainScreen() {
   const route = useRoute();
@@ -19,12 +18,9 @@ export default function GameMainScreen() {
   const [modalType, setModalType] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState("blue");
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(initialLives);//현재 목숨숨
+  const [lives, setLives] = useState(initialLives); //현재 목숨숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
-
-
-
 
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
@@ -36,45 +32,43 @@ export default function GameMainScreen() {
   }, []);
 
   useEffect(() => {
-  const fetchRecycleData = async () => {
-    try {
+    const fetchRecycleData = async () => {
+      try {
+        // ✅ 요청 보내기 전 확인 로그!
+        console.log("📡 재활용 내역 요청 보냄:", userId);
 
-      // ✅ 요청 보내기 전 확인 로그!
-      console.log("📡 재활용 내역 요청 보냄:", userId);
+        const response = await axios.get(
+          `http://220.86.166.180/api/device/logs/${userId}` /*개인포트변경*/,
+          { timeout: 20000 }
+        );
 
-      const response = await axios.get(
-        `http://192.168.219.106:8080/api/device/logs/${userId}`,
-        { timeout: 20000 }
-      );
+        const data = response.data;
 
-      const data = response.data;
+        let total = 0;
+        const transformed = data.map((item) => {
+          total += item.inputCount;
+          return {
+            date: item.inputTime.split("T")[0],
+            count: item.inputCount.toString(),
+            total: total.toString(),
+          };
+        });
 
-      let total = 0;
-      const transformed = data.map((item) => {
-        total += item.inputCount;
-        return {
-          date: item.inputTime.split("T")[0],
-          count: item.inputCount.toString(),
-          total: total.toString(),
-        };
-      });
+        setRecycleData(transformed.reverse()); //최신순 정렬
+        setTotalRecycleCount(total);
+      } catch (error) {
+        console.error("재활용 내역 불러오기 실패", error);
+      }
+    };
 
-      setRecycleData(transformed.reverse());//최신순 정렬
-      setTotalRecycleCount(total);
-    } catch (error) {
-      console.error("재활용 내역 불러오기 실패", error);
-    }
-  };
+    fetchRecycleData();
+  }, []);
 
-  fetchRecycleData();
-}, []);
-
-useEffect(() => {
-  const baseLives = Number(route.params?.lives ?? 3); // ← 강제 숫자 변환!
-  const earned = Number(totalRecycleCount); // ← 이것도 숫자 변환!
-  setLives(baseLives + earned);
-}, [totalRecycleCount,route.params?.lives]);
-
+  useEffect(() => {
+    const baseLives = Number(route.params?.lives ?? 3); // ← 강제 숫자 변환!
+    const earned = Number(totalRecycleCount); // ← 이것도 숫자 변환!
+    setLives(baseLives + earned);
+  }, [totalRecycleCount, route.params?.lives]);
 
   const renderItem = ({ item }) => (
     <View style={styles.row}>
@@ -84,13 +78,11 @@ useEffect(() => {
     </View>
   );
 
-
-
   // ✅ [추가] 게임 결과 POST 요청 함수
   const submitGameResult = async () => {
     try {
       const response = await axios.post(
-        "http://<백엔드_IP>:8080/game/result",
+        "http://220.86.166.180:8080/game/result" /*개인포트변경*/,
         {
           userId: userId,
           classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
@@ -101,7 +93,6 @@ useEffect(() => {
       setScore(result.score);
       setLives(result.totalLives);
       fetchRecycleData();
-      
     } catch (error) {
       console.error("❌ 게임 결과 전송 실패", error);
     }
@@ -165,7 +156,9 @@ useEffect(() => {
               <FontAwesome name="heart" size={20} color="red" />
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statText, { marginHorizontal: 6 }]}>&ensp;&ensp;{lives}</Text>
+              <Text style={[styles.statText, { marginHorizontal: 6 }]}>
+                &ensp;&ensp;{lives}
+              </Text>
             </View>
           </View>
 
@@ -197,7 +190,9 @@ useEffect(() => {
               <FontAwesome name="recycle" size={22} color="#4CAF50" />
             </View>
             <View style={styles.statBox}>
-              <Text style={[styles.statText, { marginHorizontal: 6 }]}>&ensp;&ensp;{totalRecycleCount}</Text>
+              <Text style={[styles.statText, { marginHorizontal: 6 }]}>
+                &ensp;&ensp;{totalRecycleCount}
+              </Text>
             </View>
           </Pressable>
         </View>

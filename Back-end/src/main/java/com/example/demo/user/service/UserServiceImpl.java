@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -86,7 +85,6 @@ public class UserServiceImpl implements UserService {
         // 아이디로 사용자 찾기
         User user = userRepository.findByUserId(dto.getUserId()).orElse(null);
 
-
         // 사용자가 없으면 로그인 실패
         if (user == null) {
             return new LoginResponseDto("아이디가 존재하지 않습니다.", false);
@@ -100,22 +98,22 @@ public class UserServiceImpl implements UserService {
         }
 
         // 총 수거량 조회 (PetInputLog 기준), 점수 조회
-        int recycleCount = petInputLogRepository.countByUserId(user); 
-        Integer highestScore = rankingRepository.findHighestScoreByUserId(user); 
-        if (highestScore == null) highestScore = 0;
+        int recycleCount = petInputLogRepository.countByUserId(user);
+        Integer highestScore = rankingRepository.findHighestScoreByUserId(user);
+        if (highestScore == null)
+            highestScore = 0;
 
         // 로그인 성공
         return new LoginResponseDto(
-            "로그인 성공", 
-            true,
-            user.getUserId(),
-            user.getCharName(),
-            user.getTotalLives(),
-            recycleCount,
-            highestScore
-        
-        );
+                "로그인 성공",
+                true,
+                user.getUserId(),
+                user.getCharName(),
+                user.getTotalLives(),
+                recycleCount,
+                highestScore
 
+        );
 
     }
 
@@ -127,4 +125,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void startGameSession(StartSessionDto dto) {
     }
+
+    @Override
+    public boolean checkUserIdDuplicate(String userId) {
+        return userRepository.existsByUserId(userId);
+    }
+
 }

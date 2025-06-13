@@ -3,8 +3,8 @@ spring:
     #url: jdbc:mariadb://localhost:3306/peticle #김혜인,윤정서
     url: jdbc:mariadb://localhost:3306/peticle #박고운
     username: root
-    #password: 1234 #김혜인,박고운
-    password:  1209 #윤정서
+    password: 1234 #김혜인,박고운
+    #password:  1209 #윤정서
     driver-class-name: org.mariadb.jdbc.Driver
 
   jpa:

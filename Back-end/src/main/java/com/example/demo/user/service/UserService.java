@@ -18,4 +18,6 @@ public interface UserService {
     List<UserRankingDto> getUserRanking();
 
     void startGameSession(StartSessionDto dto);
+
+    boolean checkUserIdDuplicate(String userId);
 }

@@ -6,11 +6,11 @@ import com.example.demo.user.dto.*;
 import com.example.demo.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -27,14 +27,13 @@ public class UserController {
         }
 
         System.out.println("✅ DTO 확인: " + dto.toString());
-        return userService.registerUser(dto); // 이거 꼭 있어야 백엔드 동작함
+        return userService.registerUser(dto);
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto dto) {
         System.out.println("Controller 진입");
         return ResponseEntity.ok(userService.login(dto));
-
     }
 
     @GetMapping("/ranking")
@@ -59,11 +58,17 @@ public class UserController {
 
     // 아이디 중복 확인
     @PostMapping("/check-id")
-    public ResponseEntity<String> checkId(@RequestBody UserIdDto dto) {
-        if (userService.existsByUserId(dto.getUserId())) {
-            return ResponseEntity.badRequest().body("이미 사용 중인 아이디입니다.");
+    public ResponseEntity<?> checkId(@RequestBody Map<String, String> body) {
+        String userId = body.get("userId");
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().body("userId 누락됨");
         }
-        return ResponseEntity.ok("사용 가능한 아이디입니다.");
-    }
 
+        boolean exists = userService.checkUserIdDuplicate(userId);
+        if (exists) {
+            return ResponseEntity.ok("이미 존재하는 아이디입니다.");
+        } else {
+            return ResponseEntity.ok("사용 가능한 아이디입니다.");
+        }
+    }
 }
