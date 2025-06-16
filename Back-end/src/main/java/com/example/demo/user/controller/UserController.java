@@ -3,9 +3,11 @@ package com.example.demo.user.controller;
 import com.example.demo.school.dto.StudentVerifyDto;
 import com.example.demo.school.service.SchoolService;
 import com.example.demo.user.dto.*;
+import com.example.demo.user.repository.UserRepository;
 import com.example.demo.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +18,7 @@ import java.util.Map;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-
+    private final UserRepository userRepository;
     private final UserService userService;
 
     @PostMapping("/register")
@@ -71,4 +73,16 @@ public class UserController {
             return ResponseEntity.ok("사용 가능한 아이디입니다.");
         }
     }
+
+    // UserController.java
+    @GetMapping("/check-student")
+    public ResponseEntity<String> checkStudent(@RequestParam String studentNumber) {
+        boolean exists = userRepository.findByStudentNumber(studentNumber).isPresent();
+        if (exists) {
+            return ResponseEntity.ok("존재하는 학번입니다");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 학번입니다");
+        }
+    }
+
 }

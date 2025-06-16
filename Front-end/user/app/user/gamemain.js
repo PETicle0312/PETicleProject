@@ -38,7 +38,7 @@ export default function GameMainScreen() {
         console.log("📡 재활용 내역 요청 보냄:", userId);
 
         const response = await axios.get(
-          `http://220.86.166.180/api/device/logs/${userId}` /*개인포트변경*/,
+          `http://172.18.33.172:8080/api/device/logs/${userId}` /*개인포트변경*/,
           { timeout: 20000 }
         );
 
@@ -65,10 +65,8 @@ export default function GameMainScreen() {
   }, []);
 
   useEffect(() => {
-    const baseLives = Number(route.params?.lives ?? 3); // ← 강제 숫자 변환!
-    const earned = Number(totalRecycleCount); // ← 이것도 숫자 변환!
-    setLives(baseLives + earned);
-  }, [totalRecycleCount, route.params?.lives]);
+    setLives(Number(initialLives));
+  }, [initialLives]);
 
   const renderItem = ({ item }) => (
     <View style={styles.row}>
@@ -82,7 +80,7 @@ export default function GameMainScreen() {
   const submitGameResult = async () => {
     try {
       const response = await axios.post(
-        "http://220.86.166.180:8080/game/result" /*개인포트변경*/,
+        "http://172.18.33.172:8080/game/result" /*개인포트변경*/,
         {
           userId: userId,
           classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN

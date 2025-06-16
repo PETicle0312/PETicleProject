@@ -36,6 +36,10 @@ public class PetInputLogService {
             return "등록되지 않은 디바이스입니다";
         }
 
+        if (dto.getInputCount() <= 0) {
+            return "정상 PET이 아니므로 저장하지 않음";
+        }
+        
         // 로그 객체 생성
         PetInputLog log = PetInputLog.builder()
                 .userId(user)
@@ -48,7 +52,11 @@ public class PetInputLogService {
         petInputLogRepository.save(log);
         
         int currentLives = user.getTotalLives();
-        user.setTotalLives(currentLives + dto.getInputCount()); // PET 개수만큼 목숨 증가
+        if (dto.getInputCount() > 0) {
+            currentLives = user.getTotalLives();
+            user.setTotalLives(currentLives + dto.getInputCount());
+            userRepository.save(user);
+        } // PET 개수만큼 목숨 증가
         userRepository.save(user); // 변경 저장
 
         return "success";
