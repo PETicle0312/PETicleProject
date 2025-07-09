@@ -1,5 +1,6 @@
 package com.example.demo.school.service;
 
+import com.example.demo.school.dto.SchoolSearchResponseDto;
 import com.example.demo.school.dto.StudentVerifyDto;
 import com.example.demo.school.entity.SchoolStudentEntity;
 import com.example.demo.school.repository.SchoolRepository;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 //     }
 // }
 public interface SchoolService {
+    List<SchoolSearchResponseDto> searchSchoolsFromOpenApi(String keyword);
     List<String> searchSchool(String keyword);
     boolean verifyStudent(StudentVerifyDto dto);
 }

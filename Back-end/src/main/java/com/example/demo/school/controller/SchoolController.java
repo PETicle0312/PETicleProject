@@ -7,6 +7,7 @@ import com.example.demo.school.service.SchoolService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.example.demo.school.dto.SchoolSearchResponseDto;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
@@ -50,4 +51,10 @@ public class SchoolController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("학생 인증 실패");
         }
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<SchoolSearchResponseDto>> searchSchools(@RequestParam String keyword) {
+        List<SchoolSearchResponseDto> results = schoolService.searchSchoolsFromOpenApi(keyword);
+    return ResponseEntity.ok(results);
+}
 }
