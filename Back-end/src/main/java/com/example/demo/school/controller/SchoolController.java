@@ -29,6 +29,7 @@ public class SchoolController {
         this.schoolRepository = schoolRepository;
     }
 
+    
     // 응답 형태 변경
     @GetMapping("/search")
     public List<Map<String, Object>> searchSchool(@RequestParam String keyword) {

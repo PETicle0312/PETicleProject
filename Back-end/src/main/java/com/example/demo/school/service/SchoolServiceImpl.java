@@ -6,6 +6,7 @@ import com.example.demo.school.repository.SchoolRepository;
 import com.example.demo.school.repository.SchoolStudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class SchoolServiceImpl implements SchoolService {
 
     private final SchoolRepository schoolRepository;
     private final SchoolStudentRepository studentRepository;
+    private final RestTemplate restTemplate;
+    
 
     @Override
     public List<String> searchSchool(String keyword) {
