@@ -52,7 +52,7 @@ public class SchoolController {
         }
     }
 
-    @GetMapping("/search")
+    @GetMapping("/search-all")
     public ResponseEntity<List<SchoolSearchResponseDto>> searchSchools(@RequestParam String keyword) {
         List<SchoolSearchResponseDto> results = schoolService.searchSchoolsFromOpenApi(keyword);
     return ResponseEntity.ok(results);
