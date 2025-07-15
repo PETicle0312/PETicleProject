@@ -30,7 +30,7 @@ public class AdminNotification {
 
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
-    private Admin admin;
+    private AdminEntity admin;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)

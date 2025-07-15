@@ -2,7 +2,7 @@ package com.example.demo.device.entity;
 
 import java.time.LocalDateTime;
 
-import com.example.demo.admin.entity.Admin;
+import com.example.demo.admin.entity.AdminEntity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
@@ -31,7 +31,7 @@ public class DeviceCheckLog {
 
         @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
-    private Admin adminId;
+    private AdminEntity adminId;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
