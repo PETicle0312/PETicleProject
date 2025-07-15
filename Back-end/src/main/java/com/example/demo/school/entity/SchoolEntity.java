@@ -21,4 +21,7 @@ public class SchoolEntity {
 
     @Column(name = "region")
     private String region;
+
+    @Column(name = "address") 
+    private String address;
 }

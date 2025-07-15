@@ -20,7 +20,7 @@ export default function LoginScreen() {
 const onLogin = async () => {
   console.log("✅ 로그인 버튼 눌림");
   try {
-    const response = await axios.post("http://172.30.1.66:8080/api/admin/login", {
+    const response = await axios.post("http://172.30.1.87:8080/api/admin/login", {
       adminId: Number(managerId),
       password: password,
     });

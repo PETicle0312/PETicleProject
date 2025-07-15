@@ -1,5 +1,5 @@
 // ...기존 import
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, Stack } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, View,TouchableOpacity } from 'react-native';
 
@@ -10,6 +10,27 @@ export const options = {
 export default function AdminMainScreen() {
   const [hasUnreadAlarm, setHasUnreadAlarm] = useState(false); // true면 새 알림 있음
   const router = useRouter();
+
+
+  // 추가
+  const [schoolList, setSchoolList] = useState([]); 
+  useEffect(() => {
+    const fetchSchoolData = async () => {
+      try {
+        const response = await fetch("http://172.30.1.87:8080/api/school/search/openapi?keyword="); // 🔁 여기에 API 주소
+        const data = await response.json();
+        setSchoolList(data);
+        console.log("📦 관리자 학교 리스트:", data);
+      } catch (error) {
+        console.error("❌ 학교 리스트 불러오기 실패:", error);
+      }
+    };
+
+    fetchSchoolData();
+  }, []);
+  // 추가
+  
+
   const onPrivacy = () => {
     router.push("/admin/admin_privacy");
   };
@@ -17,8 +38,7 @@ export default function AdminMainScreen() {
     router.push("/admin/alarm");
   };  
 
-  return (
-    
+  return ( 
     <View style={styles.container}>
       {/* 상단 로고/아이콘 영역 */}
       <View style={styles.header}>
@@ -120,67 +140,55 @@ export default function AdminMainScreen() {
           <Text style={styles.sectionTitle}>기계 적재량 현황</Text>
         </View>
 
-        {/* 리스트 아이템 (여러 개) */}
-        <TouchableOpacity
-          onPress={() => router.push({
-          pathname: '/admin/admin_details/[school]',
-          params: { school: '대준세무고등학교' }
-          })}
-          style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={[styles.schoolName, { fontWeight: 'bold' }]}>대준세무고등학교</Text>
-            <Text style={[styles.statusRed, { fontWeight: 'bold' }]}>수거필요</Text>
-          </View>
-          <Text style={styles.statusRed}>적재량 : 90%</Text>
-          <Text style={styles.schoolAddr}>서울특별시 종로구 삼봉로 71</Text>
-        </TouchableOpacity>
 
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.schoolName}>경기고등학교</Text>
-            <Text style={styles.statusGreen}>양호</Text>
-          </View>
-          <Text style={styles.statusGreen}>적재량 : 20%</Text>
-          <Text style={styles.schoolAddr}>Lorem ipsum dolor sit amet</Text>
-        </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.schoolName}>광운인공지능고등학교</Text>
-            <Text style={styles.statusYellow}>주의</Text>
-          </View>
-          <Text style={styles.statusYellow}>적재량 : 50%</Text>
-          <Text style={styles.schoolAddr}>Lorem ipsum dolor sit amet</Text>
-        </View>
+        {/* 학교 카드섹션 */}
+        {schoolList.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() =>
+              router.push({
+                pathname: '/admin/admin_details/[school]',
+                params: { school: item.schoolName },
+              })
+            }
+            style={styles.card}
+          >
+            <View style={styles.cardTop}>
+              <Text style={[styles.schoolName, { fontWeight: 'bold' }]}>
+                {item.schoolName}
+              </Text>
+              <Text
+                style={[
+                  item.loadRate >= 80
+                    ? styles.statusRed
+                    : item.loadRate >= 40
+                    ? styles.statusYellow
+                    : styles.statusGreen,
+                ]}
+              >
+                {item.loadRate >= 80
+                  ? '수거필요'
+                  : item.loadRate >= 40
+                  ? '주의'
+                  : '양호'}
+              </Text>
+            </View>
+            <Text
+              style={[
+                item.loadRate >= 80
+                  ? styles.statusRed
+                  : item.loadRate >= 40
+                  ? styles.statusYellow
+                  : styles.statusGreen,
+              ]}
+            >
+              적재량 : {item.loadRate}%
+            </Text>
+            <Text style={styles.schoolAddr}>{item.address}</Text>
+          </TouchableOpacity>
+        ))}
 
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.schoolName}>광운인공지능고등학교</Text>
-            <Text style={styles.statusYellow}>주의</Text>
-          </View>
-          <Text style={styles.statusYellow}>적재량 : 50%</Text>
-          <Text style={styles.schoolAddr}>Lorem ipsum dolor sit amet</Text>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.schoolName}>광운인공지능고등학교</Text>
-            <Text style={styles.statusYellow}>주의</Text>
-          </View>
-          <Text style={styles.statusYellow}>적재량 : 50%</Text>
-          <Text style={styles.schoolAddr}>Lorem ipsum dolor sit amet</Text>
-        </View>        
-
-        <View style={styles.card}>
-          <View style={styles.cardTop}>
-            <Text style={styles.schoolName}>광운인공지능고등학교</Text>
-            <Text style={styles.statusYellow}>주의</Text>
-          </View>
-          <Text style={styles.statusYellow}>적재량 : 50%</Text>
-          <Text style={styles.schoolAddr}>Lorem ipsum dolor sit amet</Text>
-        </View>
-
-        {/* ...리스트 항목 계속 반복 */}
       </ScrollView>
     </View>
   );

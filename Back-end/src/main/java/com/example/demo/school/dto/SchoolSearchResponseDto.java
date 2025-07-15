@@ -1,11 +1,18 @@
 package com.example.demo.school.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class SchoolSearchResponseDto {
-    private Long id;
+    private Long schoolId;
     private String schoolName;
+    private String address;
+
+    public SchoolSearchResponseDto(Long schoolId, String name, String address) {
+        this.schoolId = schoolId;
+        this.schoolName = name;
+        this.address = address;
+    }
 }
+
+

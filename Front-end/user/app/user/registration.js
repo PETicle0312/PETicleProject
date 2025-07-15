@@ -17,6 +17,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   View,
+  Picker,
+  Button,
 } from "react-native";
 
 /*개인포트 변경 5개*/
@@ -39,25 +41,35 @@ export default function RegisterScreen() {
   const [schoolResults, setSchoolResults] = useState([]);
   const [schoolId, setSchoolId] = useState(null); // schoolId 저장
 
+  const [keyword, setKeyword] = useState('');
+  const [region, setRegion] = useState('서울특별시'); // 기본 지역 설정
+
   // 학교 검색 API 호출
-  const fetchSchools = async (keyword) => {
+  const fetchSchools = async (keyword, region) => {
     try {
       const response = await axios.get(
-        `http://172.30.1.66:8080/api/school/search?keyword=${keyword}` /*개인포트변경*/
+        `http://172.30.1.87:8080/api/school/search/openapi`,
+        {
+          params: {
+            keyword: keyword,
+            region: region, // ← 지역 파라미터 추가
+          },
+        }
       );
-      console.log("📦 학교 API 응답:", response.data); // ✅ 이 줄 추가
+      console.log("📦 학교 API 응답:", response.data); // ✅ 응답 로그
       setSchoolResults(response.data);
     } catch (error) {
       console.error("❌ 학교 검색 실패:", error);
     }
   };
 
+
   // 학번 인증 API 호출
   const verifyStudent = async () => {
     console.log("인증 요청 →", { studentNumber });
     try {
       const response = await axios.post(
-        "http://172.30.1.66:8080/api/school/verify" /*개인포트변경*/,
+        "http://172.30.1.87:8080/api/school/verify" /*개인포트변경*/,
         { studentNumber }
       );
       Alert.alert("인증 성공", response.data);
@@ -72,7 +84,7 @@ export default function RegisterScreen() {
     console.log(phone);
     try {
       const response = await axios.post(
-        "http://172.30.1.66:8080/users/verify-phone" /*개인포트변경*/,
+        "http://172.30.1.87:8080/users/verify-phone" /*개인포트변경*/,
         { phoneNumber: phone }
       );
       Alert.alert("인증 성공", response.data);
@@ -89,7 +101,7 @@ export default function RegisterScreen() {
     } else {
       setSchoolResults([]);
     }
-  }, [schoolSearch]);
+  }, [schoolSearch, region]);
 
   // 아이디 중복 확인 함수
   const checkIdDuplicate = async () => {
@@ -104,7 +116,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.30.1.66:8080/users/check-id" /*개인포트변경*/,
+        "http://172.30.1.87:8080/users/check-id" /*개인포트변경*/,
         // 아이디 중복 확인 API URL
         { userId: userId }
       );
@@ -138,7 +150,7 @@ export default function RegisterScreen() {
     // API 호출
     try {
       const response = await axios.post(
-        "http://172.30.1.66:8080/users/register" /*개인포트변경*/,
+        "http://172.30.1.87:8080/users/register" /*개인포트변경*/,
         {
           userId,
           password,
@@ -214,6 +226,11 @@ export default function RegisterScreen() {
                   >
                     <Ionicons name="close" size={28} color="#999" />
                   </Pressable>
+
+
+
+
+                  
 
                   <View style={styles.modalSearchRow}>
                     <TextInput
