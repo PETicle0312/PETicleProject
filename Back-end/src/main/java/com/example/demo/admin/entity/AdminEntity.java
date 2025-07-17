@@ -17,9 +17,8 @@ import lombok.*;
 public class AdminEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "admin_id")
-    private Long adminId;
+    @Column(name = "admin_id", nullable = false, unique = true)
+    private String adminId;
 
     @Column(name = "adm_name",nullable = false)
     private String admName;

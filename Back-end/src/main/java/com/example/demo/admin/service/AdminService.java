@@ -1,7 +1,12 @@
 package com.example.demo.admin.service;
 
 import com.example.demo.admin.dto.AdminLoginRequestDto;
+import com.example.demo.admin.dto.AdminLoginResponseDto;
+import com.example.demo.school.entity.SchoolEntity;
+
+import java.util.List;
 
 public interface AdminService {
-    boolean login(AdminLoginRequestDto dto);
-}
+    AdminLoginResponseDto login(AdminLoginRequestDto dto);  // ✅ 반환타입 수정
+    List<SchoolEntity> getSchoolsByAdminRegion(String adminId);
+}   

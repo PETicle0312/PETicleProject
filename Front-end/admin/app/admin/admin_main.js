@@ -1,6 +1,6 @@
 // ...기존 import
 import { useEffect, useState } from 'react';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, View,TouchableOpacity } from 'react-native';
 
 export const options = {
@@ -14,13 +14,25 @@ export default function AdminMainScreen() {
 
   // 추가
   const [schoolList, setSchoolList] = useState([]); 
+  const [adminRegion, setAdminRegion] = useState(""); //관리자 지역 상태
+  
   useEffect(() => {
     const fetchSchoolData = async () => {
       try {
-        const response = await fetch("http://172.30.1.87:8080/api/school/search/openapi?keyword="); // 🔁 여기에 API 주소
-        const data = await response.json();
-        setSchoolList(data);
-        console.log("📦 관리자 학교 리스트:", data);
+        const schoolRes = await fetch("http://172.30.1.44:8080/api/school/search/openapi?keyword=");
+        const schoolData = await schoolRes.json();
+
+        // 🔽 예시: 로그인 후 지역을 로컬스토리지나 전역 상태에서 불러온다고 가정
+        const region = localStorage.getItem("adminRegion") || "강서구"; // 실제로는 AsyncStorage 등 사용
+        setAdminRegion(region);
+
+        // 🔽 지역 필터링 적용
+        const filteredSchools = schoolData.filter((school) =>
+          school.address.includes(region)
+        );
+
+        setSchoolList(filteredSchools);
+        console.log("📦 필터링된 학교 리스트:", filteredSchools);
       } catch (error) {
         console.error("❌ 학교 리스트 불러오기 실패:", error);
       }
@@ -28,7 +40,6 @@ export default function AdminMainScreen() {
 
     fetchSchoolData();
   }, []);
-  // 추가
   
 
   const onPrivacy = () => {

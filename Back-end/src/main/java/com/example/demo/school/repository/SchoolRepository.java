@@ -18,4 +18,7 @@ public interface SchoolRepository extends JpaRepository<SchoolEntity, Long> {
 
     // 중복 저장 방지용 존재 여부 확인
     boolean existsBySchoolName(String schoolName);
+
+    // 지역 기반 학교 조회
+    List<SchoolEntity> findByAdminRegion(String adminRegion);
 }

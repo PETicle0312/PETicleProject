@@ -24,4 +24,8 @@ public class SchoolEntity {
 
     @Column(name = "address") 
     private String address;
+
+    @Column(name = "admin_region", length = 50)
+    private String adminRegion;
+    
 }
