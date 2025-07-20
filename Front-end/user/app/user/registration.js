@@ -41,8 +41,8 @@ export default function RegisterScreen() {
   const [schoolResults, setSchoolResults] = useState([]);
   const [schoolId, setSchoolId] = useState(null); // schoolId 저장
 
-  const [keyword, setKeyword] = useState('');
-  const [region, setRegion] = useState('서울특별시'); // 기본 지역 설정
+  const [keyword, setKeyword] = useState("");
+  const [region, setRegion] = useState("서울특별시"); // 기본 지역 설정
 
   // 학교 검색 API 호출
   const fetchSchools = async (keyword, region) => {
@@ -62,7 +62,6 @@ export default function RegisterScreen() {
       console.error("❌ 학교 검색 실패:", error);
     }
   };
-
 
   // 학번 인증 API 호출
   const verifyStudent = async () => {
@@ -227,11 +226,6 @@ export default function RegisterScreen() {
                     <Ionicons name="close" size={28} color="#999" />
                   </Pressable>
 
-
-
-
-                  
-
                   <View style={styles.modalSearchRow}>
                     <TextInput
                       style={styles.modalSearchInput}
@@ -251,8 +245,8 @@ export default function RegisterScreen() {
                         style={styles.schoolItem}
                         onPress={() => {
                           console.log("✅ 선택한 학교 item:", item);
-                          setSchoolName(item.schoolName); // 사용자에게 보여줄 이름
-                          setSchoolId(item.schoolId); // 백엔드에 보낼 schoolId
+                          setSchoolName(item.schoolName);
+                          setSchoolId(item.schoolId);
                           setModalVisible(false);
                         }}
                       >
@@ -266,6 +260,17 @@ export default function RegisterScreen() {
                 </View>
               </View>
             </Modal>
+
+            {/* 이름 */}
+            <Text style={styles.label}>이름</Text>
+            <View style={styles.row}>
+              <TextInput
+                style={styles.inputFlex}
+                placeholder="이름을 입력해 주세요"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
 
             {/* 학번 */}
             <Text style={styles.label}>학번을 입력해 주세요</Text>
@@ -294,17 +299,6 @@ export default function RegisterScreen() {
                   </Text>
                 )}
               </Pressable>
-            </View>
-
-            {/* 이름 */}
-            <Text style={styles.label}>이름</Text>
-            <View style={styles.row}>
-              <TextInput
-                style={styles.inputFlex}
-                placeholder="이름을 입력해 주세요"
-                value={name}
-                onChangeText={setName}
-              />
             </View>
 
             {/* 휴대폰 번호 */}
@@ -347,7 +341,7 @@ export default function RegisterScreen() {
               />
 
               <Pressable
-                onPress={checkIdDuplicate} // 여기에 아이디 중복 확인 함수 연결
+                onPress={checkIdDuplicate} //중복 확인 함수 연결
                 style={({ pressed }) => [
                   styles.buttonSmall,
                   pressed && styles.buttonSmallPressed,

@@ -89,7 +89,8 @@ export default function LoginScreen() {
           onChangeText={setPassword}
         />
 
-        <Pressable
+        {/*
+       <Pressable
           onPress={() => console.log("비밀번호 찾기")}
           style={({ pressed }) => pressed && { opacity: 0.8 }}
         >
@@ -99,6 +100,7 @@ export default function LoginScreen() {
             </Text>
           )}
         </Pressable>
+      */}
 
         <View style={styles.buttonRow}>
           <Pressable
@@ -158,16 +160,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
   },
-  forgot: {
+  /*forgot: {
     fontSize: 12,
     color: "#777",
     textAlign: "right",
-    marginTop: 15,
-    marginBottom: 30,
-  },
+   
+  },*/
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 25,
   },
   button: {
     backgroundColor: "#FFFFFF",
