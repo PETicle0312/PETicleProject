@@ -1,20 +1,24 @@
 package com.example.demo.admin.dto;
 
 import com.example.demo.school.entity.SchoolEntity;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
 public class AdminLoginResponseDto {
+
     private String adminId;
     private String adminName;
     private String adminRegion;
-    private List<SchoolEntity> schools; // 또는 SchoolResponseDto로 교체 가능
+    private List<SchoolEntity> schools;  // ✅ 관리자 지역의 학교 리스트 포함
+
+    @Builder
+    public AdminLoginResponseDto(String adminId, String adminName, String adminRegion, List<SchoolEntity> schools) {
+        this.adminId = adminId;
+        this.adminName = adminName;
+        this.adminRegion = adminRegion;
+        this.schools = schools;
+    }
 }

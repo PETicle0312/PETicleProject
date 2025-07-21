@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import axios from 'axios'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -16,37 +17,37 @@ export default function LoginScreen() {
  */
 
 
-// 7월 8일 작업중!!
-const onLogin = async () => {
-  console.log("✅ 로그인 버튼 눌림");
-  try {
-    const response = await axios.post("http://172.30.1.44:8080/api/admin/login", {
-      adminId: Number(managerId),
-      password: password,
-    });
+  const onLogin = async () => {
+    console.log("✅ 로그인 버튼 눌림");
+    try {
+      const response = await axios.post("http://172.30.1.76:8080/api/admin/login", {
+        adminId: Number(managerId),
+        password: password,
+      });
 
-    console.log("🔁 서버 응답:", response);
+      console.log("🔁 서버 응답:", response);
 
-    if (response.status === 200) {
-      Alert.alert("로그인 성공", String(response.data));
-      router.push("/admin/admin_main");
-    } else {
-      Alert.alert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다.");
+      if (response.status === 200) {
+        // ✅ 로그인 성공 시 adminId 저장
+        await AsyncStorage.setItem("adminId", managerId); // managerId는 문자열이므로 그대로 저장해도 OK
+        Alert.alert("로그인 성공", String(response.data));
+        router.replace("/admin/admin_main"); 
+      } else {
+        Alert.alert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다.");
+      }
+    } catch (error) {
+      console.error("❌ 로그인 실패:", error);
+
+      let errorMessage = "네트워크 또는 서버 오류입니다.";
+      if (error.response && typeof error.response.data === "string") {
+        errorMessage = error.response.data;
+      } else if (error.response && error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      Alert.alert("로그인 실패", errorMessage);
     }
-  } catch (error) {
-    console.error("❌ 로그인 실패:", error);
-
-    let errorMessage = "네트워크 또는 서버 오류입니다.";
-    if (error.response && typeof error.response.data === "string") {
-      errorMessage = error.response.data;
-    } else if (error.response && error.response.data?.message) {
-      // 백엔드에서 { message: "..."} 형식으로 줄 수도 있음
-      errorMessage = error.response.data.message;
-    }
-
-    Alert.alert("로그인 실패", errorMessage);
-  }
-};
+  };
 
 
   return (

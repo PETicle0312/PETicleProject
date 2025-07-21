@@ -31,13 +31,13 @@ public AdminLoginResponseDto login(AdminLoginRequestDto dto) {
         return null;
     }
 
-    List<SchoolEntity> schools = schoolRepository.findByAdminRegion(admin.getAdminRegion());
+    //List<SchoolEntity> schools = schoolRepository.findByAdminRegion(admin.getAdminRegion());
 
     return AdminLoginResponseDto.builder()
         .adminId(admin.getAdminId())
         .adminName(admin.getAdmName())
         .adminRegion(admin.getAdminRegion())
-        .schools(schools)
+        //.schools(schools)
         .build();
 }   
 

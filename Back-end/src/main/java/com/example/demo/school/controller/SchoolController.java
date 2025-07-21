@@ -53,27 +53,20 @@ public class SchoolController {
         }
     }
 
-// @GetMapping("/search/openapi")
-// public ResponseEntity<List<SchoolSearchResponseDto>> searchSchoolsFromOpenApi(
-//     @RequestParam String keyword,
-//     @RequestParam(required = false) String region // ← 지역명은 선택 (예: 서울특별시, 경기도 등)
-// ) {
-//     List<SchoolSearchResponseDto> results = schoolService.searchSchoolsFromOpenApi(keyword, region);
-//     return ResponseEntity.ok(results);
-// }
 
-@GetMapping("/search/openapi")
-public ResponseEntity<List<SchoolSearchResponseDto>> searchSchoolsFromOpenApi(
-    @RequestParam String keyword,
-    @RequestParam(required = false) String region // ← 지역명은 선택
-) {
-    // 만약 "전국"이 들어오면 null로 변환하여 서비스에서 지역 필터 없이 처리
-    if ("전국".equals(region)) {
-        region = null;
+    //전국 학교
+    @GetMapping("/search/openapi")
+    public ResponseEntity<List<SchoolSearchResponseDto>> searchSchoolsFromOpenApi(
+        @RequestParam String keyword,
+        @RequestParam(required = false) String region // ← 지역명은 선택
+    ) {
+        // 만약 "전국"이 들어오면 null로 변환하여 서비스에서 지역 필터 없이 처리
+        if ("전국".equals(region)) {
+            region = null;
+        }
+
+        List<SchoolSearchResponseDto> results = schoolService.searchSchoolsFromOpenApi(keyword, region);
+        return ResponseEntity.ok(results);
     }
-
-    List<SchoolSearchResponseDto> results = schoolService.searchSchoolsFromOpenApi(keyword, region);
-    return ResponseEntity.ok(results);
-}
 
 }

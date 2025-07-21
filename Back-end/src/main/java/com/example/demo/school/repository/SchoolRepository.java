@@ -21,4 +21,5 @@ public interface SchoolRepository extends JpaRepository<SchoolEntity, Long> {
 
     // 지역 기반 학교 조회
     List<SchoolEntity> findByAdminRegion(String adminRegion);
+    List<SchoolEntity> findByRegion(String region);
 }

@@ -3,9 +3,12 @@ package com.example.demo.admin.controller;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
 import com.example.demo.admin.service.AdminService;
+import com.example.demo.school.entity.SchoolEntity;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -27,6 +30,14 @@ public class AdminController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패");
         }
+    }
+
+
+        // 🔽 로그인 이후, 관리자 지역 기반 학교 리스트 요청
+    @GetMapping("/schools")
+    public ResponseEntity<List<SchoolEntity>> getSchoolsByRegion(@RequestParam String adminId) {
+        List<SchoolEntity> schools = adminService.getSchoolsByAdminRegion(adminId);
+        return ResponseEntity.ok(schools);
     }
 
 

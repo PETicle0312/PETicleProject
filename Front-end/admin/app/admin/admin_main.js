@@ -1,7 +1,8 @@
-// ...기존 import
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, View,TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export const options = {
   headerShown: false,
@@ -11,34 +12,25 @@ export default function AdminMainScreen() {
   const [hasUnreadAlarm, setHasUnreadAlarm] = useState(false); // true면 새 알림 있음
   const router = useRouter();
 
-
   // 추가
   const [schoolList, setSchoolList] = useState([]); 
-  const [adminRegion, setAdminRegion] = useState(""); //관리자 지역 상태
   
   useEffect(() => {
-    const fetchSchoolData = async () => {
+    const fetchSchoolsByRegion = async () => {
       try {
-        const schoolRes = await fetch("http://172.30.1.44:8080/api/school/search/openapi?keyword=");
-        const schoolData = await schoolRes.json();
+        const adminId = await AsyncStorage.getItem("adminId");
+        console.log("🟢 로그인된 관리자 ID:", adminId);
 
-        // 🔽 예시: 로그인 후 지역을 로컬스토리지나 전역 상태에서 불러온다고 가정
-        const region = localStorage.getItem("adminRegion") || "강서구"; // 실제로는 AsyncStorage 등 사용
-        setAdminRegion(region);
-
-        // 🔽 지역 필터링 적용
-        const filteredSchools = schoolData.filter((school) =>
-          school.address.includes(region)
-        );
-
-        setSchoolList(filteredSchools);
-        console.log("📦 필터링된 학교 리스트:", filteredSchools);
-      } catch (error) {
-        console.error("❌ 학교 리스트 불러오기 실패:", error);
+        // eslint-disable-next-line no-undef
+        const response = await axios.get(`http://172.30.1.76:8080/api/admin/schools?adminId=${adminId}`);
+        setSchoolList(response.data);
+        console.log("🏫 필터된 학교 리스트:", response.data);
+      } catch (err) {
+        console.error("❌ 학교 리스트 가져오기 실패:", err);
       }
     };
 
-    fetchSchoolData();
+    fetchSchoolsByRegion();
   }, []);
   
 
@@ -123,7 +115,7 @@ export default function AdminMainScreen() {
     </View>
   </View>
   {/* 수거필요 */}
-  <View style={styles.tableRow}>0
+  <View style={styles.tableRow}>
     <Text style={[styles.levelDanger, styles.bold]}>수거필요</Text>
   </View>  
   <View style={styles.tableRow}>

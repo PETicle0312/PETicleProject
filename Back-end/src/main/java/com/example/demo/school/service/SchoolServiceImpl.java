@@ -36,86 +36,79 @@ public class SchoolServiceImpl implements SchoolService {
     public List<SchoolSearchResponseDto> searchSchoolsFromOpenApi(String keyword, String region) {
         List<SchoolSearchResponseDto> result = new ArrayList<>();
 
-        try {
-            // 1. API 요청 URL 생성
+        int page = 1;
+        boolean hasMore = true;
+
+        while (hasMore) {
             String apiUrl = "https://open.neis.go.kr/hub/schoolInfo" +
                             "?KEY=1c3792e5f07d4c64beab09cf53ef1e19" +
                             "&Type=json" +
-                            "&pIndex=1" +
+                            "&pIndex=" + page +
                             "&pSize=100";
 
-            // 지역은 무조건 서울특별시로 고정
-            apiUrl += "&LCTN_SC_NM=서울특별시";
-
-            // 학교명 검색어 추가
-            apiUrl += "&SCHUL_NM=" + keyword;
-
-            // 지역명이 넘어오면 추가
+            // 지역 처리
             if (region != null && !region.isEmpty()) {
                 apiUrl += "&LCTN_SC_NM=" + region;
+            } else {
+                apiUrl += "&LCTN_SC_NM=서울특별시";
             }
 
-            apiUrl += "&SCHUL_NM=" + keyword;
+            // 키워드가 있을 경우만 추가
+            if (keyword != null && !keyword.isEmpty()) {
+                apiUrl += "&SCHUL_NM=" + keyword;
+            }
 
-            // 2. API 요청 및 응답
-            String jsonString = restTemplate.getForObject(apiUrl, String.class);
+            try {
+                String jsonString = restTemplate.getForObject(apiUrl, String.class);
+                JSONObject jsonObject = new JSONObject(jsonString);
 
-            // 3. JSON 파싱
-            JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray rowArray = jsonObject
-                                    .getJSONArray("schoolInfo")
-                                    .getJSONObject(1)
-                                    .getJSONArray("row");
+                JSONArray rowArray = jsonObject
+                                        .getJSONArray("schoolInfo")
+                                        .getJSONObject(1)
+                                        .getJSONArray("row");
 
-            // for (int i = 0; i < rowArray.length(); i++) {
-            //     JSONObject school = rowArray.getJSONObject(i);
-            //     String name = school.getString("SCHUL_NM");           // 학교 이름
-            //     String address = school.optString("ORG_RDNMA", "");   // 도로명 주소
-
-            //     SchoolEntity entity;
-            //     if (!schoolRepository.existsBySchoolName(name)) {
-            //         entity = new SchoolEntity();
-            //         entity.setSchoolName(name);
-            //         entity.setAddress(address);
-            //         schoolRepository.save(entity);
-            //     } else {
-            //         entity = schoolRepository.findBySchoolName(name).orElse(null);
-            //         if (entity == null) continue;
-            //     }
-
-
-            for (int i = 0; i < rowArray.length(); i++) {
-                JSONObject school = rowArray.getJSONObject(i);
-                String kind = school.optString("SCHUL_KND_SC_NM", ""); // 고등/중등/초등 등
-                if (!kind.equals("고등학교") && !kind.equals("중학교")) {
-                    continue; // 초등학교 등은 제외
+                if (rowArray.length() == 0) {
+                    break;
                 }
 
-                String name = school.getString("SCHUL_NM");
-                String address = school.optString("ORG_RDNMA", "");
+                for (int i = 0; i < rowArray.length(); i++) {
+    JSONObject school = rowArray.getJSONObject(i);
+    String kind = school.optString("SCHUL_KND_SC_NM", "");
+    if (!kind.equals("고등학교") && !kind.equals("중학교")) continue;
 
-                SchoolEntity entity;
-                if (!schoolRepository.existsBySchoolName(name)) {
-                    entity = new SchoolEntity();
-                    entity.setSchoolName(name);
-                    entity.setAddress(address); // ✅ 주소 저장 유지됨
-                    schoolRepository.save(entity);
+    String name = school.getString("SCHUL_NM");
+    String address = school.optString("ORG_RDNMA", "");
+
+    // Optional 없이 중복 확인
+    SchoolEntity entity = schoolRepository.findBySchoolName(name).orElse(null);
+
+    if (entity == null) {
+        entity = new SchoolEntity();
+        entity.setSchoolName(name);
+        entity.setAddress(address);
+        schoolRepository.save(entity);
+        System.out.println("✅ 새로 저장됨: " + name);
+    } else {
+        System.out.println("⚠️ 이미 존재함: " + name);
+    }
+
+    result.add(new SchoolSearchResponseDto(entity.getId(), name, address));
+}
+
+                if (rowArray.length() < 100) {
+                    hasMore = false;
                 } else {
-                    entity = schoolRepository.findBySchoolName(name).orElse(null);
-                    if (entity == null) continue;
+                    page++;
                 }
 
-
-                // 5. 응답 리스트에 추가
-                result.add(new SchoolSearchResponseDto(entity.getId(), name, address));
+            } catch (Exception e) {
+                e.printStackTrace();
+                hasMore = false;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return result;
-    }
-
+    }  
 
     @Override
     public boolean verifyStudent(StudentVerifyDto dto) {
