@@ -9,13 +9,14 @@ export default function AdminDetailScreen() {
     const { school } = useLocalSearchParams(); //학교데이터
 
     const [showNfcPopup, setShowNfcPopup] = useState(false); //NFC인식
+
     // 예시 데이터
     const schoolName = "대중세무고등학교";
     const date = "2025-03-11(화) 12:44";
     const location = "서울 종로구 계동길 84-10";
     const deviceId = "IXFG12345DW";
 
-
+    //바텀시트 open
     const openSheet = () => {
     setShowMonthPicker(true);
     Animated.timing(slideAnim, {
@@ -24,6 +25,8 @@ export default function AdminDetailScreen() {
         useNativeDriver: false,
     }).start();
     };
+
+    //바텀시트 close
     const closeSheet = () => {
     Animated.timing(slideAnim, {
         toValue: SCREEN_HEIGHT,
@@ -31,27 +34,39 @@ export default function AdminDetailScreen() {
         useNativeDriver: false,
     }).start(() => setShowMonthPicker(false));
     };
+    
     const [showMonthPicker, setShowMonthPicker] = useState(false);
-    const [selectedMonth, setSelectedMonth] = useState('2025년 5월');
 
-  // 선택 가능한 월 예시
-    const monthList = [
-        '2025년 5월','2025년 4월', '2025년 3월', '2025년 2월', '2025년 1월',
-     '2024년 12월'
-    ];
+    function generateRecentMonthsWithPeriod(count = 6) {
+    const monthList = [];
+    const monthPeriodMap = {};
+    const today = new Date();
 
-  // 월별 시작/종료일 데이터 예시 (Object or Map)
-    const monthPeriodMap = {
-    '2025년 5월': { start: '25.05.01', end: '25.05.30' },
-    '2025년 4월': { start: '25.04.01', end: '25.04.30' },
-    '2025년 3월': { start: '25.03.01', end: '25.03.31' },
-    '2025년 2월': { start: '25.02.01', end: '25.02.29' },
-    '2025년 1월': { start: '25.01.01', end: '25.02.31' },
-    '2024년 12월': { start: '24.12.01', end: '24.12.31' },
-    // ...필요한 월 추가
-    };
+    for (let i = 0; i < count; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
 
-    // 선택된 월에 맞는 기간 가져오기
+      const label = `${year}년 ${month}월`;
+      monthList.push(label);
+
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+
+      const format = (d) =>
+        `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+
+      monthPeriodMap[label] = {
+        start: format(startDate),
+        end: format(endDate),
+      };
+    }
+
+    return { monthList, monthPeriodMap };
+  }
+
+    const { monthList, monthPeriodMap } = generateRecentMonthsWithPeriod(6);
+    const [selectedMonth, setSelectedMonth] = useState(() => monthList[0]);
     const period = monthPeriodMap[selectedMonth] || { start: '', end: '' };
 
   // 테이블용 가짜 데이터

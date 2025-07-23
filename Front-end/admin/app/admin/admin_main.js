@@ -22,7 +22,7 @@ export default function AdminMainScreen() {
         console.log("🟢 로그인된 관리자 ID:", adminId);
 
         // eslint-disable-next-line no-undef
-        const response = await axios.get(`http://172.30.1.76:8080/api/admin/schools?adminId=${adminId}`);
+        const response = await axios.get(`http://172.30.1.3:8080/api/admin/schools?adminId=${adminId}`);
         setSchoolList(response.data);
         console.log("🏫 필터된 학교 리스트:", response.data);
       } catch (err) {
