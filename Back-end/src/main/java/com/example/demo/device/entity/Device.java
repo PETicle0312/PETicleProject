@@ -3,6 +3,7 @@ package com.example.demo.device.entity;
 import java.time.LocalDateTime;
 
 import com.example.demo.school.entity.SchoolEntity;
+import com.example.demo.admin.entity.AdminEntity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.*;
@@ -23,8 +24,12 @@ public class Device {
     private Long deviceId;
 
     @ManyToOne
-    @JoinColumn(name = "school_id", nullable = false)
+    @JoinColumn(name = "school_id", nullable = false, foreignKey = @ForeignKey(name = "fk_school_id"))
     private SchoolEntity school;
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id", nullable = false,foreignKey = @ForeignKey(name = "fk_admin_id"))
+    private AdminEntity adminId;
 
     private int capacity;
 
