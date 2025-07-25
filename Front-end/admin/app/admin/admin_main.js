@@ -152,7 +152,7 @@ export default function AdminMainScreen() {
             onPress={() =>
               router.push({
                 pathname: '/admin/admin_details/[school]',
-                params: { school: item.schoolName },
+                params: { school: item.schoolName, address: item.address },
               })
             }
             style={styles.card}

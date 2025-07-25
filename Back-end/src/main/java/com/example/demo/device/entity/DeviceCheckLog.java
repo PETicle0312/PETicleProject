@@ -29,7 +29,7 @@ public class DeviceCheckLog {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime logTime;     // yyyy-MM-dd HH:mm:ss
 
-        @ManyToOne
+    @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
     private AdminEntity adminId;
 
