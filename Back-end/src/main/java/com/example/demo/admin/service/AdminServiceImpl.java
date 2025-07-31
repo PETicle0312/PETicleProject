@@ -42,7 +42,7 @@ public AdminLoginResponseDto login(AdminLoginRequestDto dto) {
 }   
 
     @Override
-    public List<SchoolEntity> getSchoolsByAdminRegion(String adminId) {
+    public List<SchoolEntity> getSchoolsByAdminRegion(Long adminId) {
         AdminEntity admin = adminRepository.findByAdminId(adminId)
             .orElseThrow(() -> new IllegalArgumentException("❌ 해당 관리자 ID를 찾을 수 없습니다: " + adminId));
 
@@ -50,4 +50,5 @@ public AdminLoginResponseDto login(AdminLoginRequestDto dto) {
 
         return schoolRepository.findByAdminRegion(adminRegion);
     }
+
 }

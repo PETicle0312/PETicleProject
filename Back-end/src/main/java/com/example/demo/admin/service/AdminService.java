@@ -7,6 +7,6 @@ import com.example.demo.school.entity.SchoolEntity;
 import java.util.List;
 
 public interface AdminService {
-    AdminLoginResponseDto login(AdminLoginRequestDto dto);  // ✅ 반환타입 수정
-    List<SchoolEntity> getSchoolsByAdminRegion(String adminId);
-}   
+    AdminLoginResponseDto login(AdminLoginRequestDto dto);
+    List<SchoolEntity> getSchoolsByAdminRegion(Long adminId);
+}
