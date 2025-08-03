@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class DeviceStatusResponse {
     private Long deviceId;
-    private int capacity;
-    private double percentage; // ← DB 저장 X, 계산값
+    private double capacity;
     private LocalDateTime lastUpdate;
 }

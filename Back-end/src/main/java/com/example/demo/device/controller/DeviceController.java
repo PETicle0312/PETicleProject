@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DeviceController {
 
-    private final DeviceRepository deviceRepository;
+    private final DeviceRepository deviceRepository; //DB 에서 디바이스 정보를 불러오거나 수정할 때 사용하는 JPA레포
 
     // POST: 수거함 상태 업데이트
     @PostMapping("/{deviceId}/capacity")
@@ -28,11 +28,12 @@ public class DeviceController {
         Optional<Device> optionalDevice = deviceRepository.findById(deviceId);
         if (optionalDevice.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Device not found");
-        }
+        }// DB에서 해당 수거함 찾기 or 오류 응답 반환
 
-        Device device = optionalDevice.get();
+        Device device = optionalDevice.get(); // 실제 Device객체 꺼냄
 
-        device.setCapacity((int) request.getCapacity());
+         // 센서에서 계산된 퍼센트 값으로 capacity 필드 업데이트
+        device.setCapacity(request.getCapacity());
         device.setLastUpdate(LocalDateTime.now());
 
         deviceRepository.save(device);
@@ -40,19 +41,15 @@ public class DeviceController {
     }
 
     // GET: 수거 상태 조회
-    @GetMapping("/{deviceId}/status")
+    @GetMapping("/{deviceId}/status") // 클라이언트에 전달
     public ResponseEntity<DeviceStatusResponse> getStatus(@PathVariable Long deviceId) {
         return deviceRepository.findById(deviceId)
-                .map(device -> {
-                    double maxCapacity = 30.0;
-                    double percentage = Math.min(device.getCapacity() / maxCapacity * 100.0, 100.0);
-                    return ResponseEntity.ok(new DeviceStatusResponse(
-                            device.getDeviceId(),
-                            device.getCapacity(),
-                            percentage,
-                            device.getLastUpdate()
-                    ));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+                .map(device -> ResponseEntity.ok(new DeviceStatusResponse(
+                        device.getDeviceId(),
+                        device.getCapacity(),     // 이미 퍼센트 값이 저장되어 있음
+                        device.getLastUpdate()
+                )))
+                .orElse(ResponseEntity.notFound().build()); 
+     }
 }
+    
