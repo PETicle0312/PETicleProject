@@ -18,7 +18,7 @@ public class AdminEntity {
 
     @Id
     @Column(name = "admin_id", nullable = false, unique = true)
-    private String adminId;
+    private Long adminId;
 
     @Column(name = "adm_name",nullable = false)
     private String admName;

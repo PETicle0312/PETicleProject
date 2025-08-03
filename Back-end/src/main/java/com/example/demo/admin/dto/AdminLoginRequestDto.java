@@ -1,17 +1,17 @@
 package com.example.demo.admin.dto;
 
 public class AdminLoginRequestDto {
-    private String adminId;
+    private Long adminId;
     private String password;
 
     // ✅ 기본 생성자
     public AdminLoginRequestDto() {}
     
-    public String getAdminId() {
+    public Long getAdminId() {
         return adminId;
     }
 
-    public void setAdminId(String adminId) {
+    public void setAdminId(Long adminId) {
         this.adminId = adminId;
     }
 

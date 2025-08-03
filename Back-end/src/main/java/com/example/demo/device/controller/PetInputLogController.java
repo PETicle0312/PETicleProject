@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import com.example.demo.device.dto.PetInputLogDto;
 import com.example.demo.device.service.PetInputLogService;
+import com.example.demo.device.service.DeviceCheckLogService; 
+import com.example.demo.device.dto.DeviceCheckLogDto;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -17,6 +19,7 @@ import com.example.demo.device.service.PetInputLogService;
 public class PetInputLogController {
 
     private final PetInputLogService petInputLogService;
+    private final DeviceCheckLogService deviceCheckLogService;
 
     @PostMapping("/input")
     public ResponseEntity<String> inputPet(@RequestBody PetInputLogDto dto) {
@@ -28,9 +31,18 @@ public class PetInputLogController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
     }
+
     @GetMapping("/logs/{userId}")
     public ResponseEntity<List<PetInputLogDto>> getUserLogs(@PathVariable String userId) {
-    List<PetInputLogDto> logs = petInputLogService.getLogsByUserId(userId);
-    return ResponseEntity.ok(logs);
-}
+        List<PetInputLogDto> logs = petInputLogService.getLogsByUserId(userId);
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/check-logs/{deviceId}")
+    public ResponseEntity<List<DeviceCheckLogDto>> getCheckLogsByDevice(@PathVariable String deviceId) {
+        List<DeviceCheckLogDto> logs = deviceCheckLogService.getLogsByDeviceId(deviceId);
+        return ResponseEntity.ok(logs);
+    }
+
+
 }

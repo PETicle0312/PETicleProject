@@ -23,13 +23,13 @@ public class DeviceCheckLog {
     private Long checkLogId;
 
     @Column(name = "action_type", nullable = false)
-    private String actionType;  // 예: "정기 점검", "수거 완료", "문제 해결"
+    private String actionType;  // 예: "정기 점검", "수거 완료", "수리"
 
     @Column(name = "log_time", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime logTime;     // yyyy-MM-dd HH:mm:ss
 
-        @ManyToOne
+    @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
     private AdminEntity adminId;
 

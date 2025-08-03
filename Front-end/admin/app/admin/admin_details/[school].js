@@ -1,21 +1,52 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter , useLocalSearchParams } from 'expo-router';
 import { Modal, Button, Animated, Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import axios from 'axios';
 
 export default function AdminDetailScreen() {
     const SCREEN_HEIGHT = Dimensions.get('window').height;    
     const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-    const { school } = useLocalSearchParams(); //학교데이터
+    const { school, address } = useLocalSearchParams(); //학교데이터
+    
 
     const [showNfcPopup, setShowNfcPopup] = useState(false); //NFC인식
-    // 예시 데이터
-    const schoolName = "대중세무고등학교";
-    const date = "2025-03-11(화) 12:44";
-    const location = "서울 종로구 계동길 84-10";
-    const deviceId = "IXFG12345DW";
+    const [checkLogs, setCheckLogs] = useState([]); //
+
+    useEffect(() => {
+      const fetchLogs = async () => {
+        try {
+          const response = await axios.get(`http://172.30.1.3:8080/api/device/check-logs/${deviceId}`);
+          const formatted = response.data.map(log => {
+            const dateObj = new Date(log.logTime);
+            const yearMonth = `${dateObj.getFullYear()}년 ${String(dateObj.getMonth() + 1).padStart(2, '0')}월`;
+            const formattedDate = `${String(dateObj.getFullYear()).slice(2)}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+            return {
+              adminId: log.adminId,
+              admin: log.adminName,
+              date: formattedDate,
+              yearMonth: yearMonth,
+            };
+          });
+          setCheckLogs(formatted);
+        } catch (error) {
+          console.error('수거 로그 불러오기 실패:', error);
+        }
+      };
+
+      fetchLogs();
+    }, []);
 
 
+
+    //nfc태깅 후 팝업내 정보
+    const schoolName = school;
+    const now = new Date();
+    const date = `${now.getFullYear()}년 ${String(now.getMonth() + 1).padStart(2, '0')}월 ${String(now.getDate()).padStart(2, '0')}일 ${now.getHours() < 12 ? '오전' : '오후'} ${String(now.getHours() % 12 || 12).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    const location = address;
+    const { deviceId } = useLocalSearchParams();
+
+    //바텀시트 open
     const openSheet = () => {
     setShowMonthPicker(true);
     Animated.timing(slideAnim, {
@@ -24,6 +55,8 @@ export default function AdminDetailScreen() {
         useNativeDriver: false,
     }).start();
     };
+
+    //바텀시트 close
     const closeSheet = () => {
     Animated.timing(slideAnim, {
         toValue: SCREEN_HEIGHT,
@@ -31,36 +64,41 @@ export default function AdminDetailScreen() {
         useNativeDriver: false,
     }).start(() => setShowMonthPicker(false));
     };
+    
     const [showMonthPicker, setShowMonthPicker] = useState(false);
-    const [selectedMonth, setSelectedMonth] = useState('2025년 5월');
 
-  // 선택 가능한 월 예시
-    const monthList = [
-        '2025년 5월','2025년 4월', '2025년 3월', '2025년 2월', '2025년 1월',
-     '2024년 12월'
-    ];
+    function generateRecentMonthsWithPeriod(count = 6) {
+    const monthList = [];
+    const monthPeriodMap = {};
+    const today = new Date();
 
-  // 월별 시작/종료일 데이터 예시 (Object or Map)
-    const monthPeriodMap = {
-    '2025년 5월': { start: '25.05.01', end: '25.05.30' },
-    '2025년 4월': { start: '25.04.01', end: '25.04.30' },
-    '2025년 3월': { start: '25.03.01', end: '25.03.31' },
-    '2025년 2월': { start: '25.02.01', end: '25.02.29' },
-    '2025년 1월': { start: '25.01.01', end: '25.02.31' },
-    '2024년 12월': { start: '24.12.01', end: '24.12.31' },
-    // ...필요한 월 추가
-    };
+    for (let i = 0; i < count; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
 
-    // 선택된 월에 맞는 기간 가져오기
+      const label = `${year}년 ${month}월`;
+      monthList.push(label);
+
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+
+      const format = (d) =>
+        `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+
+      monthPeriodMap[label] = {
+        start: format(startDate),
+        end: format(endDate),
+      };
+    }
+
+    return { monthList, monthPeriodMap };
+  }
+
+    const { monthList, monthPeriodMap } = generateRecentMonthsWithPeriod(6);
+    const [selectedMonth, setSelectedMonth] = useState(() => monthList[0]);
     const period = monthPeriodMap[selectedMonth] || { start: '', end: '' };
 
-  // 테이블용 가짜 데이터
-  const tableData = Array.from({ length: 10 }).map((_, i) => ({
-    date: '2025-05-16',
-    admin: '홍길동',
-    adminId: 'SDF123WE',
-    key: i + 1,
-  }));
 
   // 1. 상태 선언 (수거 퍼센트)
   const [percent, setPercent] = useState(90); // 예시로 20%부터 시작
@@ -219,12 +257,14 @@ export default function AdminDetailScreen() {
             <Text style={[styles.tableCell, styles.cellAdmin]}>관리자</Text>
             <Text style={[styles.tableCell, styles.cellId]}>관리자 번호</Text>
           </View>
-          {tableData.map(row => (
-            <View style={styles.tableRow} key={row.key}>
-              <Text style={[styles.tableCell, styles.cellDate]}>{row.date}</Text>
-              <Text style={[styles.tableCell, styles.cellAdmin]}>{row.admin}</Text>
-              <Text style={[styles.tableCell, styles.cellId]}>{row.adminId}</Text>
-            </View>
+          {checkLogs
+            .filter(row => row.yearMonth === selectedMonth)
+            .map((row, index) => (
+              <View style={styles.tableRow} key={index}>
+                <Text style={[styles.tableCell, styles.cellDate]}>{row.date}</Text>
+                <Text style={[styles.tableCell, styles.cellAdmin]}>{row.admin}</Text>
+                <Text style={[styles.tableCell, styles.cellId]}>{row.adminId}</Text>
+              </View>
           ))}
         </ScrollView>
       </View>
