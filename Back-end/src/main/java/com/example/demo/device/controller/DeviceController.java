@@ -23,7 +23,7 @@ public class DeviceController {
     @PostMapping("/{deviceId}/capacity")
     public ResponseEntity<String> updateCapacity(
             @PathVariable Long deviceId,
-            @RequestBody CapacityRequest request) {
+            @RequestBody DeviceStatusResponse request) {
 
         Optional<Device> optionalDevice = deviceRepository.findById(deviceId);
         if (optionalDevice.isEmpty()) {
@@ -50,6 +50,6 @@ public class DeviceController {
                         device.getLastUpdate()
                 )))
                 .orElse(ResponseEntity.notFound().build()); 
-     }
+    }
 }
     
