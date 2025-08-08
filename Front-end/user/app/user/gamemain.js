@@ -38,7 +38,7 @@ export default function GameMainScreen() {
         console.log("📡 재활용 내역 요청 보냄:", userId);
 
         const response = await axios.get(
-          `http://172.18.33.172:8080/api/device/logs/${userId}` /*개인포트변경*/,
+          `http://192.168.0.46:8080/api/device/logs/${userId}` /*개인포트변경*/,
           { timeout: 20000 }
         );
 
@@ -80,7 +80,7 @@ export default function GameMainScreen() {
   const submitGameResult = async () => {
     try {
       const response = await axios.post(
-        "http://172.18.33.172:8080/game/result" /*개인포트변경*/,
+        "http://192.168.0.46:8080/game/result" /*개인포트변경*/,
         {
           userId: userId,
           classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
