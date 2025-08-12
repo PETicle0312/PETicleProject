@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+export const options = { headerShown: false }; // ← 헤더(뒤로가기) 없애기
 export default function LoginScreen() {
   const router = useRouter();
   const [managerId, setManagerId] = useState("");
