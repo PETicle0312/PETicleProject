@@ -1,5 +1,6 @@
 package com.example.demo.admin.controller;
 
+import com.example.demo.admin.dto.AdminInfoUpdateRequestDto;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
 import com.example.demo.admin.dto.SchoolStatusResponse;
@@ -77,4 +78,11 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("현재 비밀번호가 일치하지 않습니다.");
         }
     }
+
+    @PutMapping("/api/admin/update-info")
+public ResponseEntity<String> updateAdminInfo(@RequestBody AdminInfoUpdateRequestDto dto) {
+    adminService.updateAdminInfo(dto);
+    return ResponseEntity.ok("관리자 정보가 변경되었습니다.");
+}
+
 }
