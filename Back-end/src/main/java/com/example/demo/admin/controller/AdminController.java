@@ -3,6 +3,7 @@ package com.example.demo.admin.controller;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
 import com.example.demo.admin.dto.SchoolStatusResponse;
+import com.example.demo.admin.dto.PasswordChangeRequestDto; // ✅ 추가
 import com.example.demo.admin.service.AdminService;
 import com.example.demo.device.entity.Device;
 import com.example.demo.device.repository.DeviceRepository;
@@ -16,9 +17,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
+// @CrossOrigin(origins = "*") // 모바일/웹 테스트용 CORS가 필요하면 주석 해제
 public class AdminController {
 
     private final AdminService adminService;
+
+    @Autowired
+    private DeviceRepository deviceRepository;
 
     public AdminController(AdminService adminService) {
         this.adminService = adminService;
@@ -30,25 +35,20 @@ public class AdminController {
 
         AdminLoginResponseDto result = adminService.login(dto);
         if (result != null) {
-            return ResponseEntity.ok(result); // 로그인 성공 시 관리자 + 학교 리스트 반환
+            return ResponseEntity.ok(result);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패");
         }
     }
 
-
-        // 🔽 로그인 이후, 관리자 지역 기반 학교 리스트 요청
-    @Autowired
-    private DeviceRepository deviceRepository;
-
+    // 🔽 로그인 이후, 관리자 지역 기반 학교 리스트 요청
     @GetMapping("/schools")
     public ResponseEntity<List<SchoolStatusResponse>> getSchoolsByRegion(@RequestParam Long adminId) {
         List<SchoolEntity> schools = adminService.getSchoolsByAdminRegion(adminId);
 
         List<SchoolStatusResponse> response = schools.stream().map(school -> {
-            // 디바이스 리스트 조회
             List<Device> devices = deviceRepository.findBySchool(school);
-            Device device = devices.isEmpty() ? null : devices.get(0); // 첫 번째 디바이스만 사용
+            Device device = devices.isEmpty() ? null : devices.get(0);
 
             double loadRate = (device != null) ? device.getCapacity() : 0.0;
 
@@ -60,5 +60,21 @@ public class AdminController {
         }).toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    // ✅ 비밀번호 변경 엔드포인트 추가
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequestDto request) {
+        boolean result = adminService.changePassword(
+            request.getAdminId(),
+            request.getCurrentPassword(),
+            request.getNewPassword()
+        );
+
+        if (result) {
+            return ResponseEntity.ok("비밀번호 변경 성공");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("현재 비밀번호가 일치하지 않습니다.");
+        }
     }
 }

@@ -9,4 +9,6 @@ import java.util.List;
 public interface AdminService {
     AdminLoginResponseDto login(AdminLoginRequestDto dto);
     List<SchoolEntity> getSchoolsByAdminRegion(Long adminId);
+ // ✅ 비밀번호 변경
+    boolean changePassword(Long adminId, String currentPassword, String newPassword);
 }

@@ -7,6 +7,8 @@ import com.example.demo.admin.repository.AdminRepository;
 import com.example.demo.school.entity.SchoolEntity;
 import com.example.demo.school.repository.SchoolRepository;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+
 
 
 import java.util.List;
@@ -51,4 +53,21 @@ public AdminLoginResponseDto login(AdminLoginRequestDto dto) {
         return schoolRepository.findByAdminRegion(adminRegion);
     }
 
+  // ✅ 비밀번호 변경 핵심 로직
+    @Override
+    @Transactional
+    public boolean changePassword(Long adminId, String currentPassword, String newPassword) {
+        AdminEntity admin = adminRepository.findByAdminId(adminId)
+                .orElseThrow(() -> new RuntimeException("❌ 해당 관리자를 찾을 수 없습니다."));
+
+        // 현재 비밀번호 검증
+        if (!admin.getAdmPassword().equals(currentPassword)) {
+            return false;
+        }
+
+        // 새 비밀번호로 업데이트
+        admin.setAdmPassword(newPassword);
+        adminRepository.save(admin);
+        return true;
+    }
 }

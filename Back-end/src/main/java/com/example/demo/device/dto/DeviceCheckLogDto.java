@@ -10,5 +10,6 @@ import java.time.LocalDateTime;
 public class DeviceCheckLogDto {
     private String adminId;
     private String adminName;
+    private String actionType;
     private LocalDateTime logTime;
 }
