@@ -1,6 +1,7 @@
 package com.example.demo.device.repository;
 
 import com.example.demo.device.entity.PetInputLog;
+import com.example.demo.openapi.dto.StudentsRankingDto;
 import com.example.demo.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -42,10 +43,18 @@ public interface PetInputLogRepository extends JpaRepository<PetInputLog, Long> 
            "ORDER BY FUNCTION('DATE', p.inputTime)")
     List<Object[]> getDailyStatsBySchoolId(@Param("schoolId") Long schoolId);
 
-    // 학교 랭킹
-    @Query("SELECT p.userId.userId, p.userId.name, SUM(p.inputCount) as totalCount " +
-           "FROM PetInputLog p WHERE p.school.id = :schoolId " +
-           "GROUP BY p.userId.userId, p.userId.name " +
-           "ORDER BY totalCount DESC")
-    List<Object[]> getSchoolRanking(@Param("schoolId") Long schoolId);
+    // 학교별 학생 랭킹
+  @Query("""
+    SELECT new com.example.demo.openapi.dto.StudentsRankingDto(
+        u.userId,
+        u.name,
+        SUM(p.inputCount)
+    )
+    FROM PetInputLog p
+    JOIN p.userId u
+    WHERE p.school.id = :schoolId
+    GROUP BY u.userId, u.name
+    ORDER BY SUM(p.inputCount) DESC
+""")
+List<StudentsRankingDto> getStudentsRanking(@Param("schoolId") Long schoolId);
 }

@@ -26,14 +26,18 @@ public class OpenPetInputService {
     }
 
     public TotalCountDto getSchoolTotal(Long schoolId) {
-        Long total = toLong(repo.getTotalCountBySchoolId(schoolId));
+        // 레포 메서드명이 getTotalCountBySchool 인지 getTotalCountBySchoolId 인지 확인!
+        Long total = toLong(
+            repo.getTotalCountBySchoolId(schoolId)   // ← 이 이름이 맞으면 그대로
+            // repo.getTotalCountBySchool(schoolId)  // ← 레포가 이렇게 되어 있으면 이 줄로 교체
+        );
         return new TotalCountDto(schoolId, total);
     }
 
     public List<PetLogPublicDto> getUserRecentLogs(String userId, int limit) {
         return repo.findTop50ByUserId_UserIdOrderByInputTimeDesc(userId)
                    .stream()
-                   .limit(limit)
+                   .limit(limit) // limit이 50보다 크면 50까지만 리턴됨
                    .map(this::toPublicDto)
                    .toList();
     }
@@ -49,13 +53,10 @@ public class OpenPetInputService {
                    .toList();
     }
 
-    public List<SchoolRankingDto> getSchoolRanking(Long schoolId) {
-        return repo.getSchoolRanking(schoolId).stream()
-                   .map(arr -> new SchoolRankingDto(
-                       (String) arr[0], (String) arr[1], toLong(arr[2])
-                   ))
-                   .toList();
+    public List<StudentsRankingDto> getStudentsRanking(Long schoolId) {
+        return repo.getStudentsRanking(schoolId);
     }
+
 
     /* helpers */
     private PetLogPublicDto toPublicDto(PetInputLog p) {
@@ -63,6 +64,7 @@ public class OpenPetInputService {
         Long deviceId = p.getDevice() != null ? p.getDevice().getDeviceId() : null;
         return new PetLogPublicDto(p.getInputTime(), p.getInputCount(), schoolId, deviceId);
     }
+
     private Long toLong(Object v) {
         if (v == null) return 0L;
         if (v instanceof Integer i) return i.longValue();
@@ -70,10 +72,11 @@ public class OpenPetInputService {
         if (v instanceof Number n) return n.longValue();
         return 0L;
     }
+
     private LocalDate toLocalDate(Object o) {
         if (o instanceof java.time.LocalDate d) return d;
         if (o instanceof java.sql.Date d) return d.toLocalDate();
         if (o instanceof java.util.Date d) return new Date(d.getTime()).toLocalDate();
         return null;
-        }
+    }
 }

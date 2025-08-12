@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,20 +23,22 @@ public class OpenPetInputController {
 
     private final OpenPetInputService svc;
 
+    // ✅ 하나로 통합: from 없으면 전체, 있으면 해당 시점부터 합계
     @GetMapping("/users/{userId}/total-count")
-    public TotalCountDto getUserTotal(@PathVariable String userId) {
-        return svc.getUserTotal(userId);
+    public TotalCountDto getUserTotal(
+            @PathVariable String userId,
+            @RequestParam(required = false) String from // ISO-8601: yyyy-MM-dd 또는 yyyy-MM-ddTHH:mm:ss
+    ) {
+        if (from == null || from.isBlank()) {
+            return svc.getUserTotal(userId); // 전체 총합
+        }
+        LocalDateTime fromDt = parseFlexible(from);
+        return svc.getUserTotalFromDate(userId, fromDt); // 기준일시부터 합계
     }
 
     @GetMapping("/schools/{schoolId}/total-count")
     public TotalCountDto getSchoolTotal(@PathVariable Long schoolId) {
         return svc.getSchoolTotal(schoolId);
-    }
-
-    @GetMapping("/users/{userId}/total-count-since")
-    public TotalCountDto getUserTotalSince(@PathVariable String userId,
-                                           @RequestParam String from) { // ISO-8601
-        return svc.getUserTotalFromDate(userId, LocalDateTime.parse(from));
     }
 
     @GetMapping("/users/{userId}/recent-logs")
@@ -50,8 +53,17 @@ public class OpenPetInputController {
         return svc.getDailyStatsBySchool(schoolId);
     }
 
-    @GetMapping("/schools/{schoolId}/ranking")
-    public List<SchoolRankingDto> ranking(@PathVariable Long schoolId) {
-        return svc.getSchoolRanking(schoolId);
+    @GetMapping("/schools/{schoolId}/students-ranking")
+    public List<StudentsRankingDto> ranking(@PathVariable Long schoolId) {
+        return svc.getStudentsRanking(schoolId);
+    }
+
+    // ---- 내부 유틸: 날짜/날짜시간 모두 허용 ----
+    private LocalDateTime parseFlexible(String s) {
+        try {
+            return LocalDateTime.parse(s);          // yyyy-MM-ddTHH:mm:ss
+        } catch (Exception ignore) {
+            return LocalDate.parse(s).atStartOfDay(); // yyyy-MM-dd
+        }
     }
 }
