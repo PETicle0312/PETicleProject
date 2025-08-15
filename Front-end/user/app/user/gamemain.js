@@ -18,7 +18,7 @@ export default function GameMainScreen() {
   const [modalType, setModalType] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState("blue");
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(initialLives); //현재 목숨숨
+  const [lives, setLives] = useState(initialLives); //현재 목숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
 
@@ -38,7 +38,7 @@ export default function GameMainScreen() {
         console.log("📡 재활용 내역 요청 보냄:", userId);
 
         const response = await axios.get(
-          `http://172.18.33.172:8080/api/device/logs/${userId}` /*개인포트변경*/,
+          `http://121.162.170.25:8080/api/device/logs/${userId}` /*개인포트변경*/,
           { timeout: 20000 }
         );
 
@@ -80,7 +80,7 @@ export default function GameMainScreen() {
   const submitGameResult = async () => {
     try {
       const response = await axios.post(
-        "http://172.18.33.172:8080/game/result" /*개인포트변경*/,
+        "http://121.162.170.25:8080/game/result" /*개인포트변경*/,
         {
           userId: userId,
           classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
@@ -90,7 +90,7 @@ export default function GameMainScreen() {
       const result = response.data;
       setScore(result.score);
       setLives(result.totalLives);
-      fetchRecycleData();
+      //fetchRecycleData();
     } catch (error) {
       console.error("❌ 게임 결과 전송 실패", error);
     }
@@ -142,7 +142,7 @@ export default function GameMainScreen() {
               source={require("../../assets/images/greenhead.png")}
               style={styles.profileImage}
             />
-            <Text style={styles.profileText}>{userId}님</Text>
+            <Text style={styles.profileText}>{userId}</Text>
           </View>
         </Pressable>
 

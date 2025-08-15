@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#00000055",
     paddingHorizontal: 10,
     height: 50,
-    width: 190,
+    width: 150,
     paddingVertical: 6,
     borderRadius: 50,
   },
@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
     maxHeight: "70%",
   },
   modalHeader: {
-    flexDirection: "column", // ✅ 세로 정렬
-    alignItems: "flex-start", // ✅ 왼쪽 정렬
+    flexDirection: "column",
+    alignItems: "flex-start",
     marginBottom: 12,
     width: "100%",
   },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "flex-start",
-    gap: 24, // 자식 요소 간 간격
+    gap: 24,
   },
   charactermodalHeader: {
     marginBottom: 12,

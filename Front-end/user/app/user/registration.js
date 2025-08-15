@@ -48,7 +48,7 @@ export default function RegisterScreen() {
   const fetchSchools = async (keyword, region) => {
     try {
       const response = await axios.get(
-        `http://172.30.1.44:8080/api/school/search/openapi`,
+        `http://121.162.170.25:8080/api/school/search/openapi`,
         {
           params: {
             keyword: keyword,
@@ -68,7 +68,7 @@ export default function RegisterScreen() {
     console.log("인증 요청 →", { studentNumber });
     try {
       const response = await axios.post(
-        "http://172.30.1.44:8080/api/school/verify" /*개인포트변경*/,
+        "http://121.162.170.25:8080/api/school/verify" /*개인포트변경*/,
         { studentNumber }
       );
       Alert.alert("인증 성공", response.data);
@@ -83,7 +83,7 @@ export default function RegisterScreen() {
     console.log(phone);
     try {
       const response = await axios.post(
-        "http://172.30.1.44:8080/users/verify-phone" /*개인포트변경*/,
+        "http://121.162.170.25:8080/users/verify-phone" /*개인포트변경*/,
         { phoneNumber: phone }
       );
       Alert.alert("인증 성공", response.data);
@@ -115,7 +115,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://172.30.1.44:8080/users/check-id" /*개인포트변경*/,
+        "http://121.162.170.25:8080/users/check-id" /*개인포트변경*/,
         // 아이디 중복 확인 API URL
         { userId: userId }
       );
@@ -149,7 +149,7 @@ export default function RegisterScreen() {
     // API 호출
     try {
       const response = await axios.post(
-        "http://172.30.1.44:8080/users/register" /*개인포트변경*/,
+        "http://121.162.170.25:8080/users/register" /*개인포트변경*/,
         {
           userId,
           password,
