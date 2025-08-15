@@ -31,7 +31,7 @@ public class Device {
     @JoinColumn(name = "admin_id", nullable = false,foreignKey = @ForeignKey(name = "fk_admin_id"))
     private AdminEntity adminId;
 
-    private int capacity;
+    private double capacity;
 
     @Column(name = "last_update")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

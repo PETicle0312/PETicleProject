@@ -38,7 +38,7 @@ export default function GameMainScreen() {
         console.log("📡 재활용 내역 요청 보냄:", userId);
 
         const response = await axios.get(
-          `http://121.162.170.25:8080/api/device/logs/${userId}` /*개인포트변경*/,
+          `http://192.168.0.46:8080/api/device/logs/${userId}` /*개인포트변경*/,
           { timeout: 20000 }
         );
 
