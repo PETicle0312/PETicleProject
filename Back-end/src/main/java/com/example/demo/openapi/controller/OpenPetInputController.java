@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;   // ✅ 추가
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,16 +25,23 @@ public class OpenPetInputController {
     private final OpenPetInputService svc;
 
     // ✅ 하나로 통합: from 없으면 전체, 있으면 해당 시점부터 합계
+    // ✅ format=plain 지원(숫자만)
     @GetMapping("/users/{userId}/total-count")
-    public TotalCountDto getUserTotal(
+    public ResponseEntity<?> getUserTotal(
             @PathVariable String userId,
-            @RequestParam(required = false) String from // ISO-8601: yyyy-MM-dd 또는 yyyy-MM-ddTHH:mm:ss
+            @RequestParam(required = false) String from,            // ISO-8601: yyyy-MM-dd 또는 yyyy-MM-ddTHH:mm:ss
+            @RequestParam(defaultValue = "json") String format      // json | plain
     ) {
-        if (from == null || from.isBlank()) {
-            return svc.getUserTotal(userId); // 전체 총합
+        TotalCountDto dto = (from == null || from.isBlank())
+                ? svc.getUserTotal(userId)                          // 전체 총합
+                : svc.getUserTotalFromDate(userId, parseFlexible(from)); // 기준일시부터 합계
+
+        if ("plain".equalsIgnoreCase(format)) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/plain; charset=UTF-8")
+                    .body(String.valueOf(dto.totalCount()));     // 숫자만
         }
-        LocalDateTime fromDt = parseFlexible(from);
-        return svc.getUserTotalFromDate(userId, fromDt); // 기준일시부터 합계
+        return ResponseEntity.ok(dto);                              // 기본 JSON
     }
 
     @GetMapping("/schools/{schoolId}/total-count")
@@ -53,9 +61,25 @@ public class OpenPetInputController {
         return svc.getDailyStatsBySchool(schoolId);
     }
 
+    // ✅ 학생 랭킹: format=csv 지원(앱인벤터에서 CSV 파싱하기 쉬움)
     @GetMapping("/schools/{schoolId}/students-ranking")
-    public List<StudentsRankingDto> ranking(@PathVariable Long schoolId) {
-        return svc.getStudentsRanking(schoolId);
+    public ResponseEntity<?> ranking(@PathVariable Long schoolId,
+                                     @RequestParam(defaultValue = "json") String format // json | csv
+    ) {
+        List<StudentsRankingDto> list = svc.getStudentsRanking(schoolId);
+        if ("csv".equalsIgnoreCase(format)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("userId,name,totalCount\n");
+            for (StudentsRankingDto r : list) {
+                sb.append(r.userId()).append(",")
+                  .append(escapeCsv(r.name())).append(",")
+                  .append(r.totalCount()).append("\n");
+            }
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/csv; charset=UTF-8")
+                    .body(sb.toString());
+        }
+        return ResponseEntity.ok(list); // 기본 JSON
     }
 
     // ---- 내부 유틸: 날짜/날짜시간 모두 허용 ----
@@ -65,5 +89,13 @@ public class OpenPetInputController {
         } catch (Exception ignore) {
             return LocalDate.parse(s).atStartOfDay(); // yyyy-MM-dd
         }
+    }
+
+    // ---- CSV 특수문자 이스케이프(콤마, 따옴표, 개행) ----
+    private static String escapeCsv(String s) {
+        if (s == null) return "";
+        boolean needQuote = s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r");
+        String v = s.replace("\"", "\"\"");
+        return needQuote ? "\"" + v + "\"" : v;
     }
 }
