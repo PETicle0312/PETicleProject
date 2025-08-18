@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -7,44 +7,55 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  Alert, // ✅ 추가
+  Alert,
 } from "react-native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const arrowLeft = require("../../assets/images/arrow_left.png");
-
-// 핸드폰 번호 자동 하이픈 함수
-function formatPhoneNumber(value) {
-  const numbers = value.replace(/\D/g, ""); // 숫자만
-  if (numbers.length < 4) return numbers;
-  if (numbers.length < 8) {
-    return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
-  }
-  return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(
-    7,
-    11
-  )}`;
-}
+const BASE_URL = "http://192.168.123.106:8080"; // ✅ 서버 주소
 
 export default function AdminAccountEditScreen() {
-  // state
-  const [phone, setPhone] = useState("010-1111-1111");
-  const [certCode, setCertCode] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  // DB에서 가져올 값
+  const [adminId, setAdminId] = useState("");
+  const [region, setRegion] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("010-1111-1111"); // 기본값 (DB랑 아직 연결 X)
 
   const router = useRouter();
   const onBack = () => router.back();
 
-  // ✅ 인증 버튼 핸들러
-  const onPressVerify = () => {
-    const digits = phone.replace(/\D/g, ""); // 숫자만 추출
-    if (digits.length === 11) {
-      Alert.alert("인증 성공", "휴대폰 번호 인증 성공", [{ text: "OK" }]);
-      // 실제 인증로직(서버 호출)이 필요하면 여기에서 API 호출
-      // e.g., axios.post('/api/.../request', { phone: digits })
-    } else {
-      Alert.alert("인증 실패", "휴대폰 번호 형식이 올바르지 않습니다.", [
-        { text: "OK" },
-      ]);
+  // ✅ DB에서 관리자 정보 불러오기
+  useEffect(() => {
+    const fetchAdminInfo = async () => {
+      try {
+        const storedId = await AsyncStorage.getItem("adminId"); // 로그인한 관리자 ID
+        if (!storedId) return;
+
+        const res = await axios.get(`${BASE_URL}/api/admin/${storedId}/info`);
+        setAdminId(res.data.adminId);
+        setRegion(res.data.region);
+        setName(res.data.name);
+      } catch (err) {
+        console.error("❌ 관리자 정보 불러오기 실패:", err);
+        Alert.alert("오류", "관리자 정보를 불러올 수 없습니다.");
+      }
+    };
+
+    fetchAdminInfo();
+  }, []);
+
+  // ✅ 수정 완료 → DB 업데이트
+  const handleSave = async () => {
+    try {
+      await axios.put(`${BASE_URL}/api/admin/${adminId}/info`, {
+        region: region,
+        name: name,
+      });
+      Alert.alert("완료", "관리자 정보가 변경되었습니다.");
+    } catch (err) {
+      console.error("❌ 관리자 정보 수정 실패:", err);
+      Alert.alert("오류", "변경 실패");
     }
   };
 
@@ -67,39 +78,37 @@ export default function AdminAccountEditScreen() {
         {/* 관리자 번호 */}
         <View style={[styles.row, { marginTop: 6 }]}>
           <Text style={styles.labelBold}>관리자 번호</Text>
-          <Text style={styles.valueGray}>ARHS152DD</Text>
+          <Text style={styles.valueGray}>{adminId}</Text>
         </View>
 
         {/* 담당지역 */}
         <View style={styles.row}>
           <Text style={styles.labelBold}>관리자 담당지역</Text>
-          <Text style={styles.valueGray}>서울 종로구</Text>
+          <TextInput
+            style={styles.input}
+            value={region}
+            onChangeText={setRegion}
+          />
         </View>
 
         {/* 이름 */}
         <View style={styles.row}>
           <Text style={styles.labelBold}>관리자 이름</Text>
-          <Text style={styles.valueGray}>김○○</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} />
         </View>
 
-        {/* --- 휴대폰 번호 + 인증 버튼 --- */}
+        {/* 휴대폰 번호 (DB랑 아직 연결 X, 나중에 인증 기능 넣을 수 있음) */}
         <View style={styles.formGroup}>
           <Text style={styles.labelBold}>휴대폰 번호</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.phoneValue}
               value={phone}
-              onChangeText={(txt) => setPhone(formatPhoneNumber(txt))}
+              onChangeText={(txt) => setPhone(txt)}
               keyboardType="phone-pad"
               placeholder="휴대폰 번호 입력"
-              onFocus={() => {
-                if (!isEditing) {
-                  setPhone("");
-                  setIsEditing(true);
-                }
-              }}
             />
-            <TouchableOpacity style={styles.certBtn} onPress={onPressVerify}>
+            <TouchableOpacity style={styles.certBtn}>
               <Text style={styles.certBtnText}>인증</Text>
             </TouchableOpacity>
           </View>
@@ -107,7 +116,7 @@ export default function AdminAccountEditScreen() {
         </View>
 
         {/* 수정완료 버튼 */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
           <Text style={styles.buttonText}>수정완료</Text>
         </TouchableOpacity>
       </View>
@@ -171,37 +180,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 6,
   },
-  phoneRow: {
-    marginBottom: 14,
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    fontSize: 15,
+    color: "#222",
+    paddingVertical: 4,
   },
   phoneValue: {
     fontSize: 15,
     color: "#888",
     flex: 1,
     paddingVertical: 4,
-  },
-  certInput: {
-    fontSize: 15,
-    color: "#222",
-    flex: 1,
-    paddingVertical: 4,
-  },
-  phoneInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  authBtn: {
-    backgroundColor: "#BDBDBD",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 5,
-    marginLeft: 6,
-  },
-  authBtnText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
   },
   certBtn: {
     backgroundColor: "#888",
@@ -221,31 +211,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#ddd",
     marginTop: 5,
-  },
-  certRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  input: {
-    flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    fontSize: 15,
-    paddingVertical: 7,
-    color: "#222",
-  },
-  checkBtn: {
-    backgroundColor: "#BDBDBD",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 5,
-    marginLeft: 8,
-  },
-  divider: {
-    borderBottomColor: "#ddd",
-    borderBottomWidth: 1,
-    marginVertical: 18,
   },
   button: {
     backgroundColor: "#fff",
