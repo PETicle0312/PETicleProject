@@ -38,11 +38,10 @@ public class PetInputLogController {
         return ResponseEntity.ok(logs);
     }
 
-    @GetMapping("/check-logs/{deviceId}")
-    public ResponseEntity<List<DeviceCheckLogDto>> getCheckLogsByDevice(@PathVariable String deviceId) {
-        List<DeviceCheckLogDto> logs = deviceCheckLogService.getLogsByDeviceId(deviceId);
-        return ResponseEntity.ok(logs);
-    }
-
-
+    // @GetMapping("/check-logs/{deviceId}")
+    // public ResponseEntity<List<DeviceCheckLogDto>> getCheckLogsByDevice(@PathVariable String deviceId) {
+    //     List<DeviceCheckLogDto> logs = deviceCheckLogService.getLogsByDeviceId(deviceId);
+    //     return ResponseEntity.ok(logs);
+    // }
+    // 일단 삭제 
 }

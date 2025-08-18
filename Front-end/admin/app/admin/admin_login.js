@@ -30,7 +30,7 @@ export default function LoginScreen() {
     console.log("✅ 로그인 버튼 눌림");
     try {
       const response = await axios.post(
-        "http://192.168.123.109:8080/api/admin/login",
+        "http://172.30.1.9:8080/api/admin/login",
         {
           adminId: Number(managerId),
           password: password,
@@ -40,9 +40,12 @@ export default function LoginScreen() {
       console.log("🔁 서버 응답:", response);
 
       if (response.status === 200) {
+
         // ✅ 로그인 성공 시 adminId 저장
         await AsyncStorage.setItem("adminId", managerId); // managerId는 문자열이므로 그대로 저장해도 OK
-        Alert.alert("로그인 성공", String(response.data));
+        
+        console.log("로그인 응답 데이터:", response.data);
+        Alert.alert("로그인 성공", response.data.adminName + " 님 환영합니다!");
         router.replace("/admin/admin_main");
       } else {
         Alert.alert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다.");

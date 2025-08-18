@@ -15,7 +15,7 @@ import axios from "axios";
 const arrowLeft = require("../../assets/images/arrow_left.png");
 
 // ⚡️ PC 로컬 IP (같은 와이파이에서만 접속 가능)
-const BASE_URL = "http://172.18.38.209:8080";
+const BASE_URL = "http://172.30.1.9:8080";
 
 export default function PasswordChangeScreen() {
   const router = useRouter();

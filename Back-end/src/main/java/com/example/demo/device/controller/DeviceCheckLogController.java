@@ -1,63 +1,81 @@
-package com.example.demo.device.controller; 
+package com.example.demo.device.controller;
 
 import com.example.demo.admin.entity.AdminEntity;
+import com.example.demo.admin.repository.AdminRepository;
+import com.example.demo.device.dto.DeviceCheckLogDto;
 import com.example.demo.device.entity.Device;
 import com.example.demo.device.entity.DeviceCheckLog;
-import com.example.demo.admin.repository.AdminRepository;
-import com.example.demo.device.repository.DeviceRepository;
 import com.example.demo.device.repository.DeviceCheckLogRepository;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.example.demo.device.repository.DeviceRepository;
+import com.example.demo.device.service.DeviceCheckLogService;
 import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
+import java.util.regex.Pattern;
 
-
-
+@CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api/device-logs")
+@RequestMapping("/api/device-logs") // ✅ 공통 prefix 지정
 @RequiredArgsConstructor
 public class DeviceCheckLogController {
 
-    private final DeviceCheckLogRepository logRepository; //로그 정보 DB 저장
-    private final AdminRepository adminRepository; // 관리자 정보 확인용
-    private final DeviceRepository deviceRepository; // 디바이스 정보 확인용
+    private final DeviceCheckLogRepository logRepository;
+    private final AdminRepository adminRepository;
+    private final DeviceRepository deviceRepository;
+    private final DeviceCheckLogService deviceCheckLogService;
 
+    /**
+     * 관리자 작업 이력 저장 (수거/점검/수리 등)
+     * POST /api/device-logs
+     */
     @PostMapping
-    public ResponseEntity<String> logAction(@RequestBody LogRequest request) {
-        Optional<AdminEntity> admin = adminRepository.findById(request.getAdminId());
-        Optional<Device> device = deviceRepository.findById(request.getDeviceId()); //관리자와 디바이스 존재 여부 확인
+    public ResponseEntity<?> logAction(@RequestBody LogRequest request) {
+        AdminEntity admin = adminRepository.findById(request.getAdminId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid adminId"));
+        Device device = deviceRepository.findById(request.getDeviceId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid deviceId"));
 
-        if (admin.isEmpty() || device.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid adminId or deviceId"); //잘못된 ID일 경우 에러 응답
-        }
-
-        DeviceCheckLog log = DeviceCheckLog.builder() //엔티티 생성 및 저장
-                .deviceId(device.get())
-                .adminId(admin.get())
+        DeviceCheckLog log = DeviceCheckLog.builder()
+                .deviceId(device)
+                .adminId(admin)
                 .actionType(request.getActionType())
                 .logTime(LocalDateTime.now())
                 .build();
 
         logRepository.save(log);
-        return ResponseEntity.ok("Logged"); // 성공 응답 반환
+
+        return ResponseEntity.ok().body("{\"message\":\"Logged\"}");
+    }
+
+    /**
+     * 특정 기기의 '월별' 수거내역 조회
+     * GET /api/device-logs/{deviceId}?yearMonth=2025-08
+     */
+    @GetMapping("/{deviceId}")
+    public ResponseEntity<List<DeviceCheckLogDto>> getCheckLogsByDevice(
+            @PathVariable Long deviceId,
+            @RequestParam String yearMonth // yyyy-MM
+    ) {
+        if (!Pattern.matches("\\d{4}-\\d{2}", yearMonth)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        List<DeviceCheckLogDto> logs =
+                deviceCheckLogService.getLogsByDeviceAndMonth(deviceId, yearMonth);
+        return ResponseEntity.ok(logs);
     }
 
     @Getter
     @Setter
-    public static class LogRequest { //내부 DTO클래스
-        private Long adminId; 
-        private Long deviceId;
-        private String actionType; // 수거완료, 점검, 수리
+    public static class LogRequest {
+        private Long adminId;     // 관리자 번호
+        private Long deviceId;    // 디바이스 번호
+        private String actionType; // "수거", "점검", "수리" 등
     }
 }
-// 관리자가 디바이스에 대해 작업 이력을 남길 때 해당 정보 DB에 저장
-// 에러나 정상 응답 반환
