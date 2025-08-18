@@ -1,5 +1,6 @@
 package com.example.demo.admin.service;
 
+import com.example.demo.admin.dto.AdminInfoResponseDto;
 import com.example.demo.admin.dto.AdminInfoUpdateRequestDto;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
@@ -11,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -48,7 +50,6 @@ public class AdminServiceImpl implements AdminService {
         return schoolRepository.findByAdminRegion(adminRegion);
     }
 
-    // ✅ 비밀번호 변경
     @Override
     @Transactional
     public boolean changePassword(Long adminId, String currentPassword, String newPassword) {
@@ -64,22 +65,29 @@ public class AdminServiceImpl implements AdminService {
         return true;
     }
 
-    // ✅ 관리자 정보 수정 (담당 지역 / 이름 등)
     @Override
     @Transactional
     public void updateAdminInfo(AdminInfoUpdateRequestDto dto) {
         AdminEntity admin = adminRepository.findByAdminId(dto.getAdminId())
                 .orElseThrow(() -> new IllegalArgumentException("❌ 해당 관리자 없음: " + dto.getAdminId()));
 
-        // 엔티티 실제 필드명에 맞춰 세팅 (admName, adminRegion 사용 중)
         if (dto.getName() != null) {
             admin.setAdmName(dto.getName());
         }
         if (dto.getRegion() != null) {
             admin.setAdminRegion(dto.getRegion());
         }
-        // 만약 phone 등 다른 필드도 엔티티에 있다면 여기서 같이 세팅
 
         adminRepository.save(admin);
+    }
+
+    @Override
+    public Optional<AdminInfoResponseDto> getAdminInfo(Long adminId) {
+        return adminRepository.findByAdminId(adminId)
+                .map(admin -> new AdminInfoResponseDto(
+                        admin.getAdminId(),
+                        admin.getAdminRegion(),
+                        admin.getAdmName()
+                ));
     }
 }

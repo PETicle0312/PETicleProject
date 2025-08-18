@@ -30,7 +30,7 @@ export default function AdminMainScreen() {
 
         // eslint-disable-next-line no-undef
         const response = await axios.get(
-          `http://172.30.1.9:8080/api/admin/schools?adminId=${adminId}`
+          `http://192.168.123.106:8080/api/admin/schools?adminId=${adminId}`
         );
         setSchoolList(response.data);
         console.log("🏫 필터된 학교 리스트:", response.data);
