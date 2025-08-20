@@ -11,11 +11,12 @@ import java.util.List;
 public interface DeviceCheckLogRepository extends JpaRepository<DeviceCheckLog, Long> {
 
     @Query("SELECT new com.example.demo.device.dto.DeviceCheckLogDto(" +
-            "l.adminId.id, a.admName, l.actionType, l.logTime) " +
+            "l.adminId.id, l.adminId.admName, l.actionType, l.logTime) "+
             "FROM DeviceCheckLog l " +
             "JOIN l.adminId a " +
             "JOIN l.deviceId d " +
             "WHERE d.id = :deviceId " +
+            "AND l.actionType = '수거' " +
             "AND FUNCTION('DATE_FORMAT', l.logTime, '%Y-%m') = :yearMonth " +
             "ORDER BY l.logTime DESC")
     List<DeviceCheckLogDto> findLogsByDeviceAndMonth(
