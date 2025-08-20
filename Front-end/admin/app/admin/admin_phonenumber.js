@@ -164,6 +164,7 @@ export default function AdminAccountEditScreen() {
         {/* 관리자 번호 */}
         <View style={[styles.row, { marginTop: 6 }]}>
           <Text style={styles.labelBold}>관리자 번호</Text>
+          
           <Text style={styles.valueGray}>{adminId}</Text>
         </View>
 
@@ -186,12 +187,8 @@ export default function AdminAccountEditScreen() {
           </Pressable>
         </View>
 
-        {/* 이름: 읽기 전용 */}
-        <View style={styles.row}>
-          <Text style={styles.labelBold}>관리자 이름</Text>
-          <Text style={styles.valueGray}>ARHS152DD</Text>
-          <View style={styles.readonlyUnderline} />
-        </View>
+        
+       
 
         {/* 휴대폰 번호 */}
         <View style={styles.formGroup}>
@@ -284,9 +281,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#222",
   },
-  content: { flex: 1, marginHorizontal: 28, marginTop: 10 },
-  row: { marginBottom: 18 },
-  formGroup: { marginBottom: 10, marginTop: 10 },
+  content: { flex: 1, marginHorizontal: 28, marginTop: 20 },
+  row: { marginBottom: 24 },
+  formGroup: { marginBottom: 18, marginTop: 18 },
   labelBold: {
     fontWeight: "bold",
     fontSize: 16,
@@ -320,7 +317,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#fff",
     borderRadius: 8,
-    marginTop: 32,
+    marginTop: 40,
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
