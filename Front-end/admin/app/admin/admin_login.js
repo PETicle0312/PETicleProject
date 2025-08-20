@@ -30,7 +30,7 @@ export default function LoginScreen() {
     console.log("✅ 로그인 버튼 눌림");
     try {
       const response = await axios.post(
-        "http://192.168.123.106:8080/api/admin/login",
+        "http://192.168.123.103:8080/api/admin/login",
         {
           adminId: Number(managerId),
           password: password,

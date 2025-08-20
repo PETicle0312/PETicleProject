@@ -27,7 +27,7 @@ export default function AdminDetailScreen() {
     const fetchLogs = async () => {
       try {
         const response = await axios.get(
-          `http://172.30.1.9:8080/api/device/check-logs/${deviceId}`
+          `http://192.168.123.103:8080/api/device/check-logs/${deviceId}`
         );
         const formatted = response.data.map((log) => {
           const dateObj = new Date(log.logTime);
