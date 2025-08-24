@@ -91,7 +91,8 @@ export default function AdminAccountEditScreen() {
         setAdminId(res.data.adminId);
         setRegion(res.data.region || "");
         setName(res.data.name || "");
-        setPhone(res.data.phone || ""); // 서버에서 내려주면 반영
+        // 화면에는 하이픈 포함 포맷으로 보여주기
+        setPhone(res.data.phone ? formatPhone(res.data.phone) : "");
       } catch (err) {
         console.error("❌ 관리자 정보 불러오기 실패:", err);
         Alert.alert("오류", "관리자 정보를 불러올 수 없습니다.");
@@ -119,22 +120,44 @@ export default function AdminAccountEditScreen() {
         Alert.alert("확인", "담당지역을 선택해주세요.");
         return;
       }
-      if (!phone || phone.replace(/\D/g, "").length < 10) {
+
+      // 전송 전 정규화
+      const normalizedPhone = phone.replace(/\D/g, ""); // 숫자만
+      const trimmedRegion = region.trim();
+
+      if (!normalizedPhone || normalizedPhone.length < 10) {
         Alert.alert("확인", "휴대폰 번호를 올바르게 입력해주세요.");
         return;
       }
 
-      // 이름은 수정하지 않으므로 전송 안 함
-      await axios.put(`${BASE_URL}/api/admin/${adminId}`, {
-        region,
-        phone,
+      // 서버가 phone 혹은 phoneNumber를 기대할 수 있어 둘 다 전송(하나는 무시될 수 있음)
+      const payload = {
+        region: trimmedRegion,
+        phone: normalizedPhone,
+        phoneNumber: normalizedPhone,
+      };
+      const url = `${BASE_URL}/api/admin/${adminId}/info`; // 조회와 동일 패턴로 저장
+      console.log("🔵 요청 URL:", url, "바디:", payload);
+
+      const res = await axios.put(url, payload, {
+        headers: { "Content-Type": "application/json" },
       });
+      console.log("🟢 수정 성공:", res.data);
+
+      // 메인에서 지역 재조회에 활용
+      await AsyncStorage.setItem("adminRegion", trimmedRegion);
 
       Alert.alert("완료", "관리자 정보가 변경되었습니다.");
       router.back();
     } catch (err) {
-      console.error("❌ 관리자 정보 수정 실패:", err);
-      Alert.alert("오류", "변경 실패");
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        (typeof err?.response?.data === "string" ? err.response.data : "") ||
+        err?.message ||
+        "알 수 없는 오류";
+      console.error("❌ 관리자 정보 수정 실패:", err?.response || err);
+      Alert.alert("오류", `변경 실패: ${serverMsg}`);
     }
   };
 
@@ -164,7 +187,6 @@ export default function AdminAccountEditScreen() {
         {/* 관리자 번호 */}
         <View style={[styles.row, { marginTop: 6 }]}>
           <Text style={styles.labelBold}>관리자 번호</Text>
-          
           <Text style={styles.valueGray}>{adminId}</Text>
         </View>
 
@@ -186,9 +208,6 @@ export default function AdminAccountEditScreen() {
             />
           </Pressable>
         </View>
-
-        
-       
 
         {/* 휴대폰 번호 */}
         <View style={styles.formGroup}>
