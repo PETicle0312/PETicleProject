@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 
-const BASE_URL = "http://192.168.123.103:8080";
+const BASE_URL = "http://172.30.1.66:8080";
 
 export const options = {
   headerShown: false,
@@ -36,7 +36,7 @@ export default function AdminMainScreen() {
       if (adminRegion) {
         try {
           const { data } = await axios.get(
-            `${BASE_URL}/api/schools/by-region`,
+            `${BASE_URL}/api/school/by-region`,
             { params: { region: adminRegion } }
           );
           setSchoolList(data || []);
@@ -186,7 +186,11 @@ export default function AdminMainScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/admin/admin_details/[school]",
-                  params: { school: item.schoolName, address: item.address },
+                  params: { 
+                    school: item.schoolName,
+                    address: item.address,
+                    deviceId: item.deviceId,
+                   },
                 })
               }
               style={styles.card}

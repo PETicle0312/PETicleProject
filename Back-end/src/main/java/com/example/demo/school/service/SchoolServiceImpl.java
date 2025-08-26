@@ -72,28 +72,28 @@ public class SchoolServiceImpl implements SchoolService {
                 }
 
                 for (int i = 0; i < rowArray.length(); i++) {
-    JSONObject school = rowArray.getJSONObject(i);
-    String kind = school.optString("SCHUL_KND_SC_NM", "");
-    if (!kind.equals("고등학교") && !kind.equals("중학교")) continue;
+                    JSONObject school = rowArray.getJSONObject(i);
+                    String kind = school.optString("SCHUL_KND_SC_NM", "");
+                    if (!kind.equals("고등학교") && !kind.equals("중학교")) continue;
 
-    String name = school.getString("SCHUL_NM");
-    String address = school.optString("ORG_RDNMA", "");
+                    String name = school.getString("SCHUL_NM");
+                    String address = school.optString("ORG_RDNMA", "");
 
-    // Optional 없이 중복 확인
-    SchoolEntity entity = schoolRepository.findBySchoolName(name).orElse(null);
+                    // Optional 없이 중복 확인
+                    SchoolEntity entity = schoolRepository.findBySchoolName(name).orElse(null);
 
-    if (entity == null) {
-        entity = new SchoolEntity();
-        entity.setSchoolName(name);
-        entity.setAddress(address);
-        schoolRepository.save(entity);
-        System.out.println("✅ 새로 저장됨: " + name);
-    } else {
-        System.out.println("⚠️ 이미 존재함: " + name);
-    }
+                    if (entity == null) {
+                        entity = new SchoolEntity();
+                        entity.setSchoolName(name);
+                        entity.setAddress(address);
+                        schoolRepository.save(entity);
+                        System.out.println("✅ 새로 저장됨: " + name);
+                    } else {
+                        System.out.println("⚠️ 이미 존재함: " + name);
+                    }
 
-    result.add(new SchoolSearchResponseDto(entity.getId(), name, address));
-}
+                    result.add(new SchoolSearchResponseDto(entity.getId(), name, address));
+                }
 
                 if (rowArray.length() < 100) {
                     hasMore = false;

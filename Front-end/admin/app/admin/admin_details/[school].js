@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
-  Modal,
-  Button,
   Animated,
   Dimensions,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,81 +15,21 @@ import {
 import axios from "axios";
 
 export default function AdminDetailScreen() {
+  // ===== 기본 세팅 =====
   const SCREEN_HEIGHT = Dimensions.get("window").height;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const { school, address } = useLocalSearchParams(); //학교데이터
+  const { school, address, deviceId } = useLocalSearchParams();
+  console.log("👉 school:", school);
+console.log("👉 address:", address);
+console.log("👉 deviceId:", deviceId);
 
-  const [showNfcPopup, setShowNfcPopup] = useState(false); //NFC인식
-  const [checkLogs, setCheckLogs] = useState([]); //
-
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const response = await axios.get(
-          `http://192.168.123.103:8080/api/device/check-logs/${deviceId}`
-        );
-        const formatted = response.data.map((log) => {
-          const dateObj = new Date(log.logTime);
-          const yearMonth = `${dateObj.getFullYear()}년 ${String(
-            dateObj.getMonth() + 1
-          ).padStart(2, "0")}월`;
-          const formattedDate = `${String(dateObj.getFullYear()).slice(
-            2
-          )}.${String(dateObj.getMonth() + 1).padStart(2, "0")}.${String(
-            dateObj.getDate()
-          ).padStart(2, "0")}`;
-          return {
-            adminId: log.adminId,
-            admin: log.adminName,
-            date: formattedDate,
-            yearMonth: yearMonth,
-          };
-        });
-        setCheckLogs(formatted);
-      } catch (error) {
-        console.error("수거 로그 불러오기 실패:", error);
-      }
-    };
-
-    fetchLogs();
-  }, []);
-
-  //nfc태깅 후 팝업내 정보
-  const schoolName = school;
-  const now = new Date();
-  const date = `${now.getFullYear()}년 ${String(now.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}월 ${String(now.getDate()).padStart(2, "0")}일 ${
-    now.getHours() < 12 ? "오전" : "오후"
-  } ${String(now.getHours() % 12 || 12).padStart(2, "0")}:${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
-
-  const location = address;
-  const { deviceId } = useLocalSearchParams();
-
-  //바텀시트 open
-  const openSheet = () => {
-    setShowMonthPicker(true);
-    Animated.timing(slideAnim, {
-      toValue: SCREEN_HEIGHT - 400, // 320: 바텀시트 높이
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  //바텀시트 close
-  const closeSheet = () => {
-    Animated.timing(slideAnim, {
-      toValue: SCREEN_HEIGHT,
-      duration: 250,
-      useNativeDriver: false,
-    }).start(() => setShowMonthPicker(false));
-  };
-
+  // ===== 상태값 =====
+  const [showNfcPopup, setShowNfcPopup] = useState(false);
+  const [checkLogs, setCheckLogs] = useState([]);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [percent, setPercent] = useState(90);
 
+  // ===== 최근 6개월 =====
   function generateRecentMonthsWithPeriod(count = 6) {
     const monthList = [];
     const monthPeriodMap = {};
@@ -108,64 +47,119 @@ export default function AdminDetailScreen() {
       const endDate = new Date(year, month, 0);
 
       const format = (d) =>
-        `${String(d.getFullYear()).slice(2)}.${String(
-          d.getMonth() + 1
-        ).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+        `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}.${String(d.getDate()).padStart(2, "0")}`;
 
-      monthPeriodMap[label] = {
-        start: format(startDate),
-        end: format(endDate),
-      };
+      monthPeriodMap[label] = { start: format(startDate), end: format(endDate) };
     }
 
     return { monthList, monthPeriodMap };
   }
 
   const { monthList, monthPeriodMap } = generateRecentMonthsWithPeriod(6);
-  const [selectedMonth, setSelectedMonth] = useState(() => monthList[0]);
+  const [selectedMonth, setSelectedMonth] = useState(monthList[0]);
   const period = monthPeriodMap[selectedMonth] || { start: "", end: "" };
 
-  // 1. 상태 선언 (수거 퍼센트)
-  const [percent, setPercent] = useState(90); // 예시로 20%부터 시작
+  // ===== 라벨 → YYYY-MM =====
+  const toYearMonth = (label) => {
+    const [year, month] = label.replace("년", "").replace("월", "").trim().split(" ");
+    return `${year}-${month.padStart(2, "0")}`;
+  };
 
-  // 2. 퍼센트에 따라 이미지 이름을 리턴하는 함수
+  // ===== 데이터 가져오기 =====
+    useEffect(() => {
+      console.log("👉 deviceId:", deviceId);
+console.log("👉 selectedMonth:", selectedMonth);
+
+      const fetchLogs = async () => {
+        try {
+          const response = await axios.get(
+            `http://172.30.1.66:8080/api/device-logs/${deviceId}`,
+            { params: { yearMonth: toYearMonth(selectedMonth) } }
+          );
+          console.log("✅ 서버 응답:", response.data); // 👉 확인 로그
+          console.log("📌 변환된 yearMonth:", toYearMonth(selectedMonth));
+          const formatted = response.data.map((log) => {
+            const dateObj = new Date(log.logTime);
+            const yearMonth = `${dateObj.getFullYear()}년 ${String(
+              dateObj.getMonth() + 1
+            ).padStart(2, "0")}월`;
+          const formattedDate = `${String(dateObj.getFullYear()).slice(2)}.${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}.${String(dateObj.getDate()).padStart(2, "0")}`;
+
+          return {
+            adminId: log.adminId,
+            admin: log.adminName,
+            date: formattedDate,
+            yearMonth: yearMonth,
+          };
+        });
+
+        setCheckLogs(formatted);
+      } catch (error) {
+        console.error("수거 로그 불러오기 실패:", error);
+      }
+    };
+
+    fetchLogs();
+  }, [selectedMonth, deviceId]);
+
+  // ===== 팝업 날짜 =====
+  const schoolName = school;
+  const location = address;
+  const now = new Date();
+  const date = `${now.getFullYear()}년 ${String(now.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}월 ${String(now.getDate()).padStart(2, "0")}일 ${
+    now.getHours() < 12 ? "오전" : "오후"
+  } ${String(now.getHours() % 12 || 12).padStart(2, "0")}:${String(
+    now.getMinutes()
+  ).padStart(2, "0")}`;
+
+  // ===== 바텀시트 =====
+  const openSheet = () => {
+    setShowMonthPicker(true);
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT - 400,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeSheet = () => {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 250,
+      useNativeDriver: false,
+    }).start(() => setShowMonthPicker(false));
+  };
+
+  // ===== 수거율 아이콘 =====
   const getLevelIcon = () => {
-    if (percent === 0) {
-      return require("../../../assets/images/levelEmpty_icon.png");
-    } else if (percent > 0 && percent <= 40) {
-      return require("../../../assets/images/levelGood_icon.png");
-    } else if (percent >= 50 && percent <= 70) {
-      return require("../../../assets/images/levelWarn_icon.png");
-    } else if (percent >= 80) {
-      return require("../../../assets/images/levelDanger_icon.png");
-    }
-    // 혹시 해당되지 않는 구간은 levelEmpty로
+    if (percent === 0) return require("../../../assets/images/levelEmpty_icon.png");
+    if (percent > 0 && percent <= 40) return require("../../../assets/images/levelGood_icon.png");
+    if (percent >= 50 && percent <= 70) return require("../../../assets/images/levelWarn_icon.png");
+    if (percent >= 80) return require("../../../assets/images/levelDanger_icon.png");
     return require("../../../assets/images/levelEmpty_icon.png");
   };
 
+  // ===== 라우터 =====
   const router = useRouter();
-  const onAlarm = () => {
-    router.push("/admin/alarm");
-  };
-  const onBack = () => {
-    router.back();
-  };
+  const onAlarm = () => router.push("/admin/alarm");
+  const onBack = () => router.back();
 
+  // ===== 화면 =====
   return (
     <View style={styles.container}>
-      {/* =========== 팝업 모달 =========== */}
-      <Modal
-        visible={showNfcPopup}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowNfcPopup(false)}
-      >
+      {/* NFC 팝업 */}
+      <Modal visible={showNfcPopup} transparent animationType="fade">
         <View style={styles.popupBackground}>
           <View style={styles.popupBox}>
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={() => setShowNfcPopup(false)}
-            >
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowNfcPopup(false)}>
               <Text style={{ fontSize: 24, color: "#aaa" }}>✕</Text>
             </TouchableOpacity>
             <Text style={styles.popupTitle}>
@@ -173,11 +167,10 @@ export default function AdminDetailScreen() {
                 {schoolName} PETicle <Text style={{ color: "#222" }}>을</Text>
               </Text>
               {"\n"}
-              <Text style={{ color: "#222", fontWeight: "bold" }}>
-                수거 완료 하시겠습니까?
-              </Text>
+              <Text style={{ color: "#222", fontWeight: "bold" }}>수거 완료 하시겠습니까?</Text>
             </Text>
-            <View style={[styles.popupInfoWrap]}>
+
+            <View style={styles.popupInfoWrap}>
               <View style={styles.popupInfoRow}>
                 <View style={styles.popupInfoLabelCol}>
                   <Text style={styles.popupInfoLabel}>일시</Text>
@@ -191,19 +184,12 @@ export default function AdminDetailScreen() {
                 </View>
               </View>
             </View>
+
             <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.confirmBtn}
-                onPress={() => {
-                  /* 예: 수거완료 처리 */
-                }}
-              >
+              <TouchableOpacity style={styles.confirmBtn} onPress={() => {}}>
                 <Text style={styles.confirmBtnText}>예</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setShowNfcPopup(false)}
-              >
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowNfcPopup(false)}>
                 <Text style={styles.cancelBtnText}>아니요</Text>
               </TouchableOpacity>
             </View>
@@ -213,152 +199,86 @@ export default function AdminDetailScreen() {
 
       {/* 상단 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={{ width: 40, alignItems: "flex-start" }}
-          onPress={onBack}
-        >
-          <Image
-            source={require("../../../assets/images/arrow_left.png")}
-            style={styles.arrowIcon}
-          />
+        <TouchableOpacity style={{ width: 40, alignItems: "flex-start" }} onPress={onBack}>
+          <Image source={require("../../../assets/images/arrow_left.png")} style={styles.arrowIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={onAlarm}>
           <View style={styles.headerIcons}>
-            <Image
-              source={require("../../../assets/images/alarm1_icon.png")}
-              style={[styles.icon, { marginLeft: 10 }]}
-            />
+            <Image source={require("../../../assets/images/alarm1_icon.png")} style={[styles.icon, { marginLeft: 10 }]} />
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* 학교명 + 적재율 박스 */}
+      {/* 학교 + 적재율 */}
       <View style={styles.statusBox}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 6,
-          }}
-        >
-          <Image
-            source={require("../../../assets/images/school_icon.png")}
-            style={styles.schoolIcon}
-          />
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+          <Image source={require("../../../assets/images/school_icon.png")} style={styles.schoolIcon} />
           <Text style={styles.schoolTitle}>{school}</Text>
         </View>
-        {/* 테스트용 버튼: 실제로는 NFC 인식 콜백에서 setShowNfcPopup(true) */}
+
         <TouchableOpacity onPress={() => setShowNfcPopup(true)}>
           <Text>테스트로 NFC 팝업 열기</Text>
         </TouchableOpacity>
-        <View style={styles.arcBox}>
-          {/* 반원 차트는 예시, 실제 구현은 SVG나 이미지 대체 */}
 
+        <View style={styles.arcBox}>
           <View style={{ alignItems: "center", marginVertical: 10 }}>
-            <Image
-              source={getLevelIcon()}
-              style={{ width: 160, height: 80, resizeMode: "contain" }}
-            />
+            <Image source={getLevelIcon()} style={{ width: 160, height: 80, resizeMode: "contain" }} />
+            <Text style={styles.arcPercent}>{percent}%</Text>
             <Text
-              style={{
-                fontSize: 22,
-                fontWeight: "bold",
-                color: "#222",
-                marginTop: 4,
-                position: "absolute",
-                top: 30,
-                textAlign: "center",
-              }}
+              style={[
+                styles.arcAlert,
+                {
+                  color:
+                    percent === 0
+                      ? "#bbb"
+                      : percent <= 40
+                      ? "#2DA25A"
+                      : percent <= 70
+                      ? "#F3B32F"
+                      : "#E94234",
+                },
+              ]}
             >
-              {percent}%
-            </Text>
-            <Text
-              style={{
-                position: "absolute",
-                top: 60,
-                textAlign: "center",
-                fontSize: 15,
-                fontWeight: "bold",
-                marginTop: 2,
-                color:
-                  percent === 0
-                    ? "#bbb"
-                    : percent <= 40
-                    ? "#2DA25A"
-                    : percent <= 70
-                    ? "#F3B32F"
-                    : "#E94234",
-              }}
-            >
-              {percent === 0
-                ? "비어있음"
-                : percent <= 40
-                ? "양호"
-                : percent <= 70
-                ? "주의"
-                : "수거필요"}
+              {percent === 0 ? "비어있음" : percent <= 40 ? "양호" : percent <= 70 ? "주의" : "수거필요"}
             </Text>
           </View>
         </View>
         <Text style={styles.deviceNum}>페티클 번호: SDF254ER</Text>
       </View>
 
-      {/* 5월 수거내역 테이블 */}
+      {/* 월별 수거내역 */}
       <View style={styles.listBox}>
-        {/* 테이블 헤더 (월 선택) */}
         <View style={{ alignItems: "center", marginBottom: 8 }}>
-          <TouchableOpacity
-            onPress={openSheet}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 2,
-            }}
-          >
-            <Text style={styles.tableHeaderTitle}>
-              {selectedMonth.split(" ")[1]} 수거내역
-            </Text>
-            <Image
-              source={require("../../../assets/images/arrow_down.png")}
-              style={{ width: 16, height: 9, marginLeft: 6 }}
-            />
+          <TouchableOpacity onPress={openSheet} style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+            <Text style={styles.tableHeaderTitle}>{selectedMonth.split(" ")[1]} 수거내역</Text>
+            <Image source={require("../../../assets/images/arrow_down.png")} style={{ width: 16, height: 9, marginLeft: 6 }} />
           </TouchableOpacity>
-
-          {/* === 여기서 기간 자동 변경 === */}
           <Text style={styles.tableHeaderPeriod}>
             {period.start} ~ {period.end}
           </Text>
         </View>
 
-        {/* 실제 테이블 */}
         <ScrollView style={{ flex: 1 }}>
           <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.cellDate]}>날짜</Text>
-            <Text style={[styles.tableCell, styles.cellAdmin]}>관리자</Text>
-            <Text style={[styles.tableCell, styles.cellId]}>관리자 번호</Text>
+            <Text style={styles.tableCell}>날짜</Text>
+            <Text style={styles.tableCell}>관리자</Text>
+            <Text style={styles.tableCell}>관리자 번호</Text>
           </View>
           {checkLogs
             .filter((row) => row.yearMonth === selectedMonth)
             .map((row, index) => (
               <View style={styles.tableRow} key={index}>
-                <Text style={[styles.tableCell, styles.cellDate]}>
-                  {row.date}
-                </Text>
-                <Text style={[styles.tableCell, styles.cellAdmin]}>
-                  {row.admin}
-                </Text>
-                <Text style={[styles.tableCell, styles.cellId]}>
-                  {row.adminId}
-                </Text>
+                <Text style={styles.tableCell}>{row.date}</Text>
+                <Text style={styles.tableCell}>{row.admin}</Text>
+                <Text style={styles.tableCell}>{row.adminId}</Text>
               </View>
             ))}
         </ScrollView>
       </View>
 
-      {/* === 드롭다운(바텀시트) 모달 === */}
+      {/* 바텀시트 */}
       {showMonthPicker && (
         <>
-          {/* 1. 검정색 배경(overlay, 고정) */}
           <Pressable
             style={{
               position: "absolute",
@@ -371,8 +291,6 @@ export default function AdminDetailScreen() {
             }}
             onPress={closeSheet}
           />
-
-          {/* 2. 바텀시트 (Animated 슬라이드) */}
           <Animated.View
             style={{
               position: "absolute",
@@ -393,7 +311,6 @@ export default function AdminDetailScreen() {
                 <Text style={{ fontSize: 24, color: "#aaa" }}>✕</Text>
               </Pressable>
             </View>
-            {/* === 리스트 부분을 ScrollView로 감싼다! === */}
             <ScrollView style={{ maxHeight: 270 }}>
               {monthList.map((month) => (
                 <TouchableOpacity
@@ -404,22 +321,9 @@ export default function AdminDetailScreen() {
                     closeSheet();
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.monthText,
-                      month === selectedMonth && {
-                        color: "#2DA25A",
-                        fontWeight: "bold",
-                      },
-                    ]}
-                  >
-                    {month}
-                  </Text>
+                  <Text style={[styles.monthText, month === selectedMonth && { color: "#2DA25A", fontWeight: "bold" }]}>{month}</Text>
                   {month === selectedMonth && (
-                    <Image
-                      source={require("../../../assets/images/check_icon.png")}
-                      style={{ width: 18, height: 14, marginRight: 5 }}
-                    />
+                    <Image source={require("../../../assets/images/check_icon.png")} style={{ width: 18, height: 14, marginRight: 5 }} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -431,6 +335,7 @@ export default function AdminDetailScreen() {
   );
 }
 
+// ===== 스타일 =====
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -450,11 +355,6 @@ const styles = StyleSheet.create({
     height: 20,
     resizeMode: "contain",
     tintColor: "#888",
-  },
-  logoImage: {
-    width: 100,
-    height: 30,
-    resizeMode: "contain",
   },
   headerIcons: {
     flexDirection: "row",
@@ -492,36 +392,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 10,
   },
-  halfCircle: {
-    width: 160,
-    height: 80,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    backgroundColor: "#E94234",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginBottom: 5,
-  },
   arcPercent: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    top: 60,
+    top: 30,
     textAlign: "center",
     fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
-    marginTop: -15,
+    color: "#222",
   },
   arcAlert: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    top: 75,
+    top: 60,
     textAlign: "center",
     fontSize: 15,
     fontWeight: "bold",
-    color: "#333",
   },
   deviceNum: {
     fontSize: 13,
@@ -530,19 +414,11 @@ const styles = StyleSheet.create({
   },
   listBox: {
     flex: 1,
-    //alignItems: 'center',
     backgroundColor: "#fff",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 10,
     marginBottom: 10,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-    paddingHorizontal: 8,
   },
   tableHeaderTitle: {
     fontSize: 16,
@@ -560,26 +436,12 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     alignItems: "center",
     paddingHorizontal: 6,
-    //backgroundColor:'red'
   },
-  tableCell: { color: "#444", fontSize: 14 },
-  cellDate: { flex: 1, textAlign: "center" },
-  cellAdmin: { flex: 1, textAlign: "center" },
-  cellId: { flex: 1, textAlign: "center" },
-  // === 바텀시트(드롭다운) 스타일 ===
-  modalOverlay: {
+  tableCell: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  bottomSheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 30,
-    minHeight: 280,
+    textAlign: "center",
+    color: "#444",
+    fontSize: 14,
   },
   bottomSheetHeader: {
     flexDirection: "row",
@@ -603,9 +465,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   monthText: { fontSize: 16, color: "#222", paddingLeft: 10 },
-  checkIcon: { color: "#2DA25A", fontSize: 18, marginLeft: 6 },
-
-  //팝업모달
+  // 팝업
   popupBackground: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.18)",
@@ -640,7 +500,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#222",
     marginTop: 20,
-    //backgroundColor:'red'
   },
   popupInfoWrap: {
     width: "100%",
@@ -650,7 +509,7 @@ const styles = StyleSheet.create({
   },
   popupInfoRow: {
     flexDirection: "row",
-    alignItems: "center", // <--- 꼭 추가!!
+    alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
   },
@@ -661,16 +520,6 @@ const styles = StyleSheet.create({
   popupInfoValueCol: {
     alignItems: "flex-start",
   },
-  popupInfo: {
-    width: "100%",
-    marginBottom: 22,
-    marginTop: 2,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
   popupInfoLabel: {
     fontWeight: "bold",
     fontSize: 12,
@@ -679,7 +528,6 @@ const styles = StyleSheet.create({
     minWidth: 62,
     textAlign: "left",
     lineHeight: 12,
-    //backgroundColor:'red'
   },
   popupInfoValue: {
     fontSize: 12,
@@ -687,7 +535,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: "left",
     lineHeight: 12,
-    //backgroundColor:'red'
   },
   buttonRow: {
     flexDirection: "row",

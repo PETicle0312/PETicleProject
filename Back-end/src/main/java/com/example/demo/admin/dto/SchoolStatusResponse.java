@@ -10,4 +10,5 @@ public class SchoolStatusResponse {
     private String schoolName;
     private String address;
     private double loadRate; // percentage 값
+    private Long deviceId;
 }

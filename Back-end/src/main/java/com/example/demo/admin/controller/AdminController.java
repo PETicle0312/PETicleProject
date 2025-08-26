@@ -52,11 +52,13 @@ public class AdminController {
             Device device = devices.isEmpty() ? null : devices.get(0);
 
             double loadRate = (device != null) ? device.getCapacity() : 0.0;
+            Long deviceId = (device != null) ? device.getDeviceId() : null;
 
             return new SchoolStatusResponse(
                 school.getSchoolName(),
                 school.getAddress(),
-                loadRate
+                loadRate,
+                deviceId
             );
         }).toList();
 
