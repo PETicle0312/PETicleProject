@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   Animated,
@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import axios from "axios";
 
@@ -20,12 +21,13 @@ export default function AdminDetailScreen() {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const { school, address, deviceId } = useLocalSearchParams();
   console.log("👉 school:", school);
-console.log("👉 address:", address);
-console.log("👉 deviceId:", deviceId);
+  console.log("👉 address:", address);
+  console.log("👉 deviceId:", deviceId);
 
   // ===== 상태값 =====
   const [showNfcPopup, setShowNfcPopup] = useState(false);
   const [checkLogs, setCheckLogs] = useState([]);
+  const [refreshing, setRefreshing] = useState(false); //새로고침
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [percent, setPercent] = useState(90);
 
@@ -69,41 +71,44 @@ console.log("👉 deviceId:", deviceId);
   };
 
   // ===== 데이터 가져오기 =====
-    useEffect(() => {
-      console.log("👉 deviceId:", deviceId);
-console.log("👉 selectedMonth:", selectedMonth);
+  // ✅ 공용으로 쓸 fetchLogs 함수 (useEffect 밖에 선언!)
+  const fetchLogs = async () => {
+    try {
+      const response = await axios.get(
+        `http://172.30.1.9:8080/api/device-logs/${deviceId}`,
+        { params: { yearMonth: toYearMonth(selectedMonth) } }
+      );
 
-      const fetchLogs = async () => {
-        try {
-          const response = await axios.get(
-            `http://172.30.1.66:8080/api/device-logs/${deviceId}`,
-            { params: { yearMonth: toYearMonth(selectedMonth) } }
-          );
-          console.log("✅ 서버 응답:", response.data); // 👉 확인 로그
-          console.log("📌 변환된 yearMonth:", toYearMonth(selectedMonth));
-          const formatted = response.data.map((log) => {
-            const dateObj = new Date(log.logTime);
-            const yearMonth = `${dateObj.getFullYear()}년 ${String(
-              dateObj.getMonth() + 1
-            ).padStart(2, "0")}월`;
-          const formattedDate = `${String(dateObj.getFullYear()).slice(2)}.${String(
-            dateObj.getMonth() + 1
-          ).padStart(2, "0")}.${String(dateObj.getDate()).padStart(2, "0")}`;
+      const formatted = response.data.map((log) => {
+        const dateObj = new Date(log.logTime);
+        const yearMonth = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월`;
+        const formattedDate = `${String(dateObj.getFullYear()).slice(2)}.${String(
+          dateObj.getMonth() + 1
+        ).padStart(2, "0")}.${String(dateObj.getDate()).padStart(2, "0")}`;
 
-          return {
-            adminId: log.adminId,
-            admin: log.adminName,
-            date: formattedDate,
-            yearMonth: yearMonth,
-          };
-        });
+        return {
+          adminId: log.adminId,
+          admin: log.admName,
+          date: formattedDate,
+          yearMonth: yearMonth,
+        };
+      });
 
-        setCheckLogs(formatted);
-      } catch (error) {
-        console.error("수거 로그 불러오기 실패:", error);
-      }
-    };
+      setCheckLogs(formatted);
+    } catch (error) {
+      console.error("수거 로그 불러오기 실패:", error);
+    }
+  };
 
+  // ===== 새로고침 핸들러 =====
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchLogs();  // ✅ 이제 정상 동작
+    setRefreshing(false);
+  }, [selectedMonth, deviceId]);
+
+  // ===== 화면 들어올 때도 실행 =====
+  useEffect(() => {
     fetchLogs();
   }, [selectedMonth, deviceId]);
 
@@ -243,7 +248,7 @@ console.log("👉 selectedMonth:", selectedMonth);
             </Text>
           </View>
         </View>
-        <Text style={styles.deviceNum}>페티클 번호: SDF254ER</Text>
+        <Text style={styles.deviceNum}>페티클 번호: PET-{deviceId}</Text>
       </View>
 
       {/* 월별 수거내역 */}
@@ -258,7 +263,12 @@ console.log("👉 selectedMonth:", selectedMonth);
           </Text>
         </View>
 
-        <ScrollView style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>날짜</Text>
             <Text style={styles.tableCell}>관리자</Text>

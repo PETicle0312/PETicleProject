@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 
-const BASE_URL = "http://172.30.1.66:8080";
+const BASE_URL = "http://172.30.1.9:8080";
 
 export const options = {
   headerShown: false,

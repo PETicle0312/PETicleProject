@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const arrowLeft = require("../../assets/images/arrow_left.png");
 const chevronRight = require("../../assets/images/arrow_left.png"); // 필요시 아이콘 재활용
-const BASE_URL = "http://172.30.1.66:8080";
+const BASE_URL = "http://172.30.1.9:8080";
 
 // 서버 없을 때 사용할 기본 지역 목록
 const REGION_FALLBACK = [
