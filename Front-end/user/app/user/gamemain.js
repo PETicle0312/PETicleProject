@@ -5,6 +5,8 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import styles from "./styles/GameMainScreenStyles";
 import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
 import { useRoute } from "@react-navigation/native";
+import EventSource from 'react-native-event-source';
+
 
 export default function GameMainScreen() {
   const route = useRoute();
@@ -18,9 +20,11 @@ export default function GameMainScreen() {
   const [modalType, setModalType] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState("blue");
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(initialLives); //현재 목숨
+  const [lives, setLives] = useState(Number(initialLives)); //현재 목숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
+  const BASE_URL = 'http://192.168.0.46:8080'; // 공통으로 빼두기
+
 
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
@@ -38,7 +42,7 @@ export default function GameMainScreen() {
         console.log("📡 재활용 내역 요청 보냄:", userId);
 
         const response = await axios.get(
-          `http://192.168.0.46:8080/api/device/logs/${userId}` /*개인포트변경*/,
+          `${BASE_URL}/api/device/logs/${userId}` /*개인포트변경*/,
           { timeout: 20000 }
         );
 
@@ -64,9 +68,35 @@ export default function GameMainScreen() {
     fetchRecycleData();
   }, []);
 
-  useEffect(() => {
-    setLives(Number(initialLives));
-  }, [initialLives]);
+
+useEffect(() => {
+  // ✅ 앱 처음 들어왔을 때 초기값 설정
+  setLives(Number(initialLives));
+
+  // ✅ SSE 구독 추가
+  const es = new EventSource(`${BASE_URL}/api/sse/lives/${userId}`);
+
+  es.addEventListener("lives", (e) => {
+    try {
+      const data = JSON.parse(e.data); 
+      setLives(data.totalLives); // 실시간 반영
+      if (typeof data.totalRecycleCount === "number") {
+      setTotalRecycleCount(data.totalRecycleCount);
+      }
+    } catch (err) {
+      console.warn("SSE parse error", err);
+    }
+  });
+
+  es.onerror = (err) => {
+    console.error("SSE error:", err);
+    // 필요하면 재연결 로직 추가 가능
+  };
+
+  return () => {
+    es.close(); // 언마운트 시 정리
+  };
+}, [initialLives, userId]);
 
   const renderItem = ({ item }) => (
     <View style={styles.row}>
@@ -77,10 +107,11 @@ export default function GameMainScreen() {
   );
 
   // ✅ [추가] 게임 결과 POST 요청 함수
+  /* 
   const submitGameResult = async () => {
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/game/result" /*개인포트변경*/,
+        "${BASE_URL}/game/result" 개인포트변경,
         {
           userId: userId,
           classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
@@ -94,8 +125,9 @@ export default function GameMainScreen() {
     } catch (error) {
       console.error("❌ 게임 결과 전송 실패", error);
     }
-  };
-
+  }; 
+  */
+ 
   //캐릭터 선택
   const characters = [
     { id: "blue", image: require("../../assets/images/bluehead.png") },

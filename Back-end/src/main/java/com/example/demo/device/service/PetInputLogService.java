@@ -1,5 +1,7 @@
 package com.example.demo.device.service;
 
+import com.example.demo.common.sse.LivesSseManager;     
+import com.example.demo.user.dto.LivesDto; 
 import com.example.demo.device.dto.PetInputLogDto;
 import com.example.demo.device.entity.Device;
 import com.example.demo.device.entity.PetInputLog;
@@ -23,6 +25,8 @@ public class PetInputLogService {
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
     private final PetInputLogRepository petInputLogRepository;
+
+    private final LivesSseManager sse;
 
     public String saveInputLog(PetInputLogDto dto) {
         String userId = dto.getUserId();
@@ -50,15 +54,22 @@ public class PetInputLogService {
                 .build();
 
         petInputLogRepository.save(log);
-        
-        int currentLives = user.getTotalLives();
-        if (dto.getInputCount() > 0) {
-            currentLives = user.getTotalLives();
-            user.setTotalLives(currentLives + dto.getInputCount());
-            userRepository.save(user);
-        } // PET 개수만큼 목숨 증가
-        userRepository.save(user); // 변경 저장
+//-----------------------------실시간 목숨반영 수정 로직---------------------------        
+    // 목숨 증가
+    int currentLives = user.getTotalLives();
+    user.setTotalLives(currentLives + dto.getInputCount());
+    userRepository.save(user);
 
+    // 누적 투입량 합계 (SUM이 null일 수 있어 0 보정)
+    Integer total = petInputLogRepository.getTotalCountByUserId(user.getUserId());
+    int totalRecycleCount = (total != null) ? total : 0;
+
+    // ✅ SSE로 실시간 푸시 (userId는 String 기준)
+    sse.publishLives(
+    user.getUserId(),
+    new LivesDto(user.getUserId(), user.getTotalLives(), totalRecycleCount) // LivesDto(userId, totalLives, totalRecycleCount)
+);
+//-----------------------------------------------------------------------------------
         return "success";
     }
 

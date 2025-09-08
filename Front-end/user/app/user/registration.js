@@ -44,11 +44,13 @@ export default function RegisterScreen() {
   const [keyword, setKeyword] = useState("");
   const [region, setRegion] = useState("서울특별시"); // 기본 지역 설정
 
+  const BASE_URL = 'http://192.168.0.46:8080'; // 공통으로 빼두기
+
   // 학교 검색 API 호출
   const fetchSchools = async (keyword, region) => {
     try {
       const response = await axios.get(
-        `http://121.162.170.25:8080/api/school/search/openapi`,
+        `${BASE_URL}/api/school/search/openapi`,
         {
           params: {
             keyword: keyword,
@@ -68,7 +70,7 @@ export default function RegisterScreen() {
     console.log("인증 요청 →", { studentNumber });
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/api/school/verify" /*개인포트변경*/,
+        `${BASE_URL}/api/school/verify` /*개인포트변경*/,
         { studentNumber }
       );
       Alert.alert("인증 성공", response.data);
@@ -83,7 +85,7 @@ export default function RegisterScreen() {
     console.log(phone);
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/verify-phone" /*개인포트변경*/,
+        `${BASE_URL}/users/verify-phone` /*개인포트변경*/,
         { phoneNumber: phone }
       );
       Alert.alert("인증 성공", response.data);
@@ -115,7 +117,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/check-id" /*개인포트변경*/,
+        `${BASE_URL}/users/check-id` /*개인포트변경*/,
         // 아이디 중복 확인 API URL
         { userId: userId }
       );
@@ -149,7 +151,7 @@ export default function RegisterScreen() {
     // API 호출
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/register" /*개인포트변경*/,
+        `${BASE_URL}/users/register` /*개인포트변경*/,
         {
           userId,
           password,
