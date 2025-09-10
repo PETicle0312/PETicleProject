@@ -6,24 +6,24 @@ import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
 import com.example.demo.admin.entity.AdminEntity;
 import com.example.demo.admin.repository.AdminRepository;
+import com.example.demo.device.entity.DeviceCheckLog;
+import com.example.demo.device.repository.DeviceCheckLogRepository;
 import com.example.demo.school.entity.SchoolEntity;
 import com.example.demo.school.repository.SchoolRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor   // final 필드 자동 생성자 주입
 public class AdminServiceImpl implements AdminService {
 
     private final AdminRepository adminRepository;
     private final SchoolRepository schoolRepository;
-
-    public AdminServiceImpl(AdminRepository adminRepository, SchoolRepository schoolRepository) {
-        this.adminRepository = adminRepository;
-        this.schoolRepository = schoolRepository;
-    }
+    private final DeviceCheckLogRepository deviceCheckLogRepository;
 
     @Override
     public AdminLoginResponseDto login(AdminLoginRequestDto dto) {
@@ -89,5 +89,11 @@ public class AdminServiceImpl implements AdminService {
                         admin.getAdminRegion(),
                         admin.getAdmName()
                 ));
+    }
+
+    // ✅ 알림 기능 (device_check_logs 기반)
+    @Override
+    public List<DeviceCheckLog> getNotifications(Long adminId) {
+        return deviceCheckLogRepository.findByAdminId_AdminIdOrderByLogTimeDesc(adminId);
     }
 }

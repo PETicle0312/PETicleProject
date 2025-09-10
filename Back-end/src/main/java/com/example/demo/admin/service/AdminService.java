@@ -4,13 +4,15 @@ import com.example.demo.admin.dto.AdminInfoResponseDto;
 import com.example.demo.admin.dto.AdminInfoUpdateRequestDto;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
+import com.example.demo.device.entity.DeviceCheckLog;
 import com.example.demo.school.entity.SchoolEntity;
 
 import java.util.List;
-import java.util.Optional;  // ✅ 추가
+import java.util.Optional;
 
 public interface AdminService {
     AdminLoginResponseDto login(AdminLoginRequestDto dto);
+
     List<SchoolEntity> getSchoolsByAdminRegion(Long adminId);
 
     boolean changePassword(Long adminId, String currentPassword, String newPassword);
@@ -19,4 +21,7 @@ public interface AdminService {
 
     // ✅ 관리자 정보 조회
     Optional<AdminInfoResponseDto> getAdminInfo(Long adminId);
+
+    // ✅ 알림 (device_check_logs 기반)
+    List<DeviceCheckLog> getNotifications(Long adminId);
 }

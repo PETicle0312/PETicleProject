@@ -4,10 +4,12 @@ import com.example.demo.admin.dto.AdminInfoResponseDto;
 import com.example.demo.admin.dto.AdminInfoUpdateRequestDto;
 import com.example.demo.admin.dto.AdminLoginRequestDto;
 import com.example.demo.admin.dto.AdminLoginResponseDto;
+import com.example.demo.admin.dto.NotificationResponseDto;
 import com.example.demo.admin.dto.SchoolStatusResponse;
 import com.example.demo.admin.dto.PasswordChangeRequestDto;
 import com.example.demo.admin.service.AdminService;
 import com.example.demo.device.entity.Device;
+import com.example.demo.device.entity.DeviceCheckLog;
 import com.example.demo.device.repository.DeviceRepository;
 import com.example.demo.school.entity.SchoolEntity;
 
@@ -95,5 +97,33 @@ public class AdminController {
         return adminService.getAdminInfo(adminId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    // 알림 조회 (DeviceCheckLog → DTO 변환)
+    @GetMapping("/notifications")
+    public ResponseEntity<List<NotificationResponseDto>> getNotifications(@RequestParam Long adminId) {
+        System.out.println("🔵 /api/admin/notifications 호출됨, adminId=" + adminId);
+
+        List<DeviceCheckLog> logs = adminService.getNotifications(adminId);
+
+        // DeviceCheckLog → NotificationResponseDto 변환
+        List<NotificationResponseDto> response = logs.stream().map(log -> {
+                String schoolName = log.getDeviceId().getSchool() != null 
+                        ? log.getDeviceId().getSchool().getSchoolName() 
+                        : "null";
+
+                System.out.println("📌 DTO 변환 schoolName=" + log.getDeviceId().getSchool().getSchoolName());
+
+            return new NotificationResponseDto(
+                log.getCheckLogId(),
+                log.getAdminId().getAdmName(),
+                log.getActionType(),
+                log.getLogTime(),
+                log.getDeviceId().getDeviceId(),
+                log.getDeviceId().getSchool().getSchoolName()
+            );
+        }).toList();
+
+        return ResponseEntity.ok(response);
     }
 }
