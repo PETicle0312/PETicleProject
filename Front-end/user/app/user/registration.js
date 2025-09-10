@@ -48,7 +48,7 @@ export default function RegisterScreen() {
   const fetchSchools = async (keyword, region) => {
     try {
       const response = await axios.get(
-        `http://121.162.170.25:8080/api/school/search/openapi`,
+        `http://172.18.35.245:8080/api/school/search/openapi`,
         {
           params: {
             keyword: keyword,
@@ -115,7 +115,7 @@ export default function RegisterScreen() {
 
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/check-id" /*개인포트변경*/,
+        "http://172.18.35.245:8080/users/check-id" /*개인포트변경*/,
         // 아이디 중복 확인 API URL
         { userId: userId }
       );
@@ -149,7 +149,7 @@ export default function RegisterScreen() {
     // API 호출
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/register" /*개인포트변경*/,
+        "http://172.18.93.209:8080/users/register" /*개인포트변경*/,
         {
           userId,
           password,

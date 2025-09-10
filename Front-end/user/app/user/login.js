@@ -21,7 +21,7 @@ export default function LoginScreen() {
     console.log("📦 로그인 요청 데이터:", { userId, password });
     try {
       const response = await axios.post(
-        "http://121.162.170.25:8080/users/login" /*개인포트변경*/,
+        "http://172.18.93.209:8080/users/login" /*개인포트변경*/,
         {
           userId,
           password,

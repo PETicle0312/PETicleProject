@@ -35,13 +35,12 @@ export default function AdminMainScreen() {
 
       if (adminRegion) {
         try {
-          const { data } = await axios.get(
-            `${BASE_URL}/api/schools/by-region`,
-            { params: { region: adminRegion } }
-          );
+          const { data } = await axios.get(`${BASE_URL}/api/school/by-region`, {
+            params: { region: adminRegion },
+          });
           setSchoolList(data || []);
           console.log("🏫 지역 기반 학교 리스트:", data);
-          return;
+          return; 
         } catch (e) {
           console.warn(
             "⚠️ by-region 실패, adminId 경로로 폴백:",

@@ -1,10 +1,40 @@
+// GameMainScreen.jsx
 import { FontAwesome } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import styles from "./styles/GameMainScreenStyles";
-import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
+import axios from "axios";
 import { useRoute } from "@react-navigation/native";
+
+/** ⛳️ 백엔드 주소: PC의 로컬 IP */
+const BASE_URL = "http://172.18.93.209:8080"; // 네 PC IP 맞게 수정
+const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 10000,
+});
+
+// 현재 하트 조회
+async function getLives(userId) {
+  const res = await api.get("/api/lives", { params: { userId } });
+  return res.data;
+}
+
+// 하트 차감
+async function consumeLife(userId) {
+  const res = await api.post("/api/lives/consume", null, {
+    params: { userId },
+  });
+  return res.data;
+}
 
 export default function GameMainScreen() {
   const route = useRoute();
@@ -14,89 +44,95 @@ export default function GameMainScreen() {
     lives: initialLives = 3,
     recycleCount = 0,
     highestScore = 0,
-  } = route.params || {};
+  } = route?.params || {};
+
   const [modalType, setModalType] = useState(null);
-  const [selectedCharacter, setSelectedCharacter] = useState("blue");
+  const [selectedCharacter, setSelectedCharacter] = useState(
+    characterName || "blue"
+  );
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(initialLives); //현재 목숨
+  const [lives, setLives] = useState(Number(initialLives));
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
+  const [busy, setBusy] = useState(false);
 
+  // ✅ 새로 추가: 하트 부족 모달
+  const [noLifeModal, setNoLifeModal] = useState(false);
+
+  // 가로 고정
   useEffect(() => {
-    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (e) {
+        console.log("Orientation lock failed:", e?.message);
+      }
+    })();
     return () => {
       ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.PORTRAIT_UP
-      );
+      ).catch(() => {});
     };
   }, []);
 
-  useEffect(() => {
-    const fetchRecycleData = async () => {
-      try {
-        // ✅ 요청 보내기 전 확인 로그!
-        console.log("📡 재활용 내역 요청 보냄:", userId);
-
-        const response = await axios.get(
-          `http://192.168.0.46:8080/api/device/logs/${userId}` /*개인포트변경*/,
-          { timeout: 20000 }
-        );
-
-        const data = response.data;
-
-        let total = 0;
-        const transformed = data.map((item) => {
-          total += item.inputCount;
-          return {
-            date: item.inputTime.split("T")[0],
-            count: item.inputCount.toString(),
-            total: total.toString(),
-          };
-        });
-
-        setRecycleData(transformed.reverse()); //최신순 정렬
-        setTotalRecycleCount(total);
-      } catch (error) {
-        console.error("재활용 내역 불러오기 실패", error);
-      }
-    };
-
-    fetchRecycleData();
-  }, []);
-
+  // 초기 라우트값 반영
   useEffect(() => {
     setLives(Number(initialLives));
   }, [initialLives]);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.date}</Text>
-      <Text style={styles.cell}>{item.count}개</Text>
-      <Text style={styles.cell}>{item.total}개</Text>
-    </View>
-  );
-
-  // ✅ [추가] 게임 결과 POST 요청 함수
-  const submitGameResult = async () => {
+  // 서버 하트 조회
+  const fetchLives = async () => {
+    if (!userId || userId === "guest") return;
     try {
-      const response = await axios.post(
-        "http://121.162.170.25:8080/game/result" /*개인포트변경*/,
-        {
-          userId: userId,
-          classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
-        }
-      );
-
-      const result = response.data;
-      setScore(result.score);
-      setLives(result.totalLives);
-      //fetchRecycleData();
-    } catch (error) {
-      console.error("❌ 게임 결과 전송 실패", error);
+      console.log("🔎 하트 조회 시도: /api/lives");
+      const data = await getLives(userId);
+      setLives(Number(data));
+    } catch (e) {
+      console.log("하트 조회 실패:", e?.message);
     }
   };
 
-  //캐릭터 선택
+  // 첫 진입 시 서버값 동기화
+  useEffect(() => {
+    fetchLives();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // PLAY: 하트 1 차감
+  const handlePlay = async () => {
+    if (!userId || userId === "guest") {
+      Alert.alert("안내", "로그인이 필요합니다.");
+      return;
+    }
+    if (Number(lives) <= 0) {
+      setNoLifeModal(true); // ✅ 모달 열기
+      return;
+    }
+
+    try {
+      setBusy(true);
+      console.log("▶️ 하트 차감 시도: /api/lives/consume");
+      const remaining = await consumeLife(userId);
+      setLives(Number(remaining));
+      console.log("✅ 남은 하트:", remaining);
+
+      // TODO: 실제 게임 시작(화면 이동/유니티 실행 등)
+      // 예) navigation.navigate("UnityScreen");
+    } catch (e) {
+      if (e?.response?.status === 409) {
+        setLives(0);
+        setNoLifeModal(true); // ✅ 모달 열기
+      } else {
+        Alert.alert("에러", String(e?.message ?? "네트워크 오류"));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // 캐릭터 선택 리소스
   const characters = [
     { id: "blue", image: require("../../assets/images/bluehead.png") },
     { id: "orange", image: require("../../assets/images/orangehead.png") },
@@ -104,7 +140,7 @@ export default function GameMainScreen() {
     { id: "green", image: require("../../assets/images/greenhead.png") },
   ];
 
-  // 순위현황데이터
+  // 순위 더미
   const rankingData = [
     { id: "peticle0312", score: "10,240" },
     { id: "peticle0312", score: "10,240" },
@@ -113,20 +149,9 @@ export default function GameMainScreen() {
     { id: "peticle0312", score: "1,240" },
   ];
 
-  // 재활용데이터
-  // recycleData = [
-  //   { date: "2024-06-01", count: "1", total: "12" },
-  //   { date: "2024-06-01", count: "1", total: "11" },
-  //   { date: "2024-06-01", count: "2", total: "10" },
-  //   { date: "2024-06-01", count: "2", total: "9" },
-  //   { date: "2024-06-01", count: "2", total: "7" },
-  //   { date: "2024-06-01", count: "1", total: "5" },
-  //   { date: "2024-06-01", count: "1", total: "3" },
-  // ];
-
   return (
     <View style={styles.container}>
-      {/* 캐릭터 배경 */}
+      {/* 배경 */}
       <Image
         source={require("../../assets/images/gamebackground.png")}
         style={styles.background}
@@ -200,130 +225,41 @@ export default function GameMainScreen() {
       {modalType === null && (
         <View style={styles.centerWrapper}>
           <Pressable
-            onPress={() => console.log("게임 시작")}
+            onPress={handlePlay}
+            disabled={busy || Number(lives) <= 0}
             style={({ pressed }) => [
               styles.playButton,
               pressed && styles.playButtonPressed,
+              (busy || Number(lives) <= 0) && { opacity: 0.6 },
             ]}
           >
-            <Image
-              source={require("../../assets/images/play.png")}
-              style={styles.playImage}
-              resizeMode="contain"
-            />
+            {busy ? (
+              <ActivityIndicator />
+            ) : (
+              <Image
+                source={require("../../assets/images/play.png")}
+                style={styles.playImage}
+                resizeMode="contain"
+              />
+            )}
           </Pressable>
         </View>
       )}
 
-      {/* ---------------------------------------------------------------------------------------------------------------------- */}
-      {/* 프로필 모달 */}
-      {modalType === "profile" && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.characterModal}>
-            {/* 상단 헤더 */}
-            <View style={styles.charactermodalHeader}>
-              <Text style={styles.charactermodalTitle}>
-                PETicle 캐릭터 선택
-              </Text>
-              <Pressable onPress={() => setModalType(null)}>
-                <Text style={{ fontSize: 22 }}>✕</Text>
-              </Pressable>
-            </View>
-
-            {/* 캐릭터 선택 라인 */}
-            <View style={styles.characterRow}>
-              {characters.map((char, index) => (
-                <Pressable
-                  key={index}
-                  onPress={() => setSelectedCharacter(char.id)}
-                  style={styles.characterOption}
-                >
-                  <Image source={char.image} style={styles.characterImage} />
-                  {selectedCharacter === char.id && (
-                    <View style={styles.checkCircle}>
-                      <FontAwesome
-                        name="check-circle-o"
-                        size={25}
-                        color="#4CAF50"
-                      />
-                    </View>
-                  )}
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/*순위 모달 */}
-
-      {modalType === "ranking" && (
+      {/* ✅ 하트 부족 모달 */}
+      {noLifeModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.rankingModal}>
-            {/* 헤더 */}
-            <View style={styles.modalHeader}>
-              <View style={styles.headerTopRow}>
-                <Text style={styles.modalTitle}>RANKING</Text>
-                <Pressable onPress={() => setModalType(null)}>
-                  <Text style={{ fontSize: 22 }}>✕</Text>
-                </Pressable>
-              </View>
-              <Text style={styles.periodText}>
-                1차 집계 기간은 1월부터 7월까지 입니다.
-              </Text>
-            </View>
-
-            {/* 표 헤더 */}
-            <View style={styles.tableHeader}>
-              <Text style={styles.headerCell}>순위</Text>
-              <Text style={styles.headerCell}>아이디</Text>
-              <Text style={styles.headerCell}>점수</Text>
-            </View>
-
-            {/* 표 내용 */}
-            <ScrollView style={styles.scrollView}>
-              {rankingData.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.rowCell}>{index + 1}</Text>
-                  <Text style={styles.rowCell}>{item.id}</Text>
-                  <Text style={styles.rowCell}>{item.score}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      )}
-
-      {/* 페트병 모달 */}
-      {modalType === "recycle" && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.rankingModal}>
-            <View style={styles.modalHeader}>
-              <View style={styles.headerTopRow}>
-                <Text style={styles.modalTitle}>수거내역</Text>
-                <Pressable onPress={() => setModalType(null)}>
-                  <Text style={{ fontSize: 22 }}>✕</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/* 표 헤더 */}
-            <View style={styles.tableHeader}>
-              <Text style={styles.headerCell}>날짜</Text>
-              <Text style={styles.headerCell}>오늘의 PET 개수</Text>
-              <Text style={styles.headerCell}>누적 수거량</Text>
-            </View>
-
-            {/* 표 내용 */}
-            <ScrollView style={styles.scrollView}>
-              {recycleData.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.rowCell}>{item.date}</Text>
-                  <Text style={styles.rowCell}>{item.count}</Text>
-                  <Text style={styles.rowCell}>{item.total}</Text>
-                </View>
-              ))}
-            </ScrollView>
+            <Text style={styles.modalTitle}>하트 부족</Text>
+            <Text style={{ marginVertical: 10 }}>
+              하트가 없어 게임을 시작할 수 없습니다.
+            </Text>
+            <Pressable
+              onPress={() => setNoLifeModal(false)}
+              style={styles.playButton}
+            >
+              <Text style={{ color: "white", fontSize: 16 }}>확인</Text>
+            </Pressable>
           </View>
         </View>
       )}
