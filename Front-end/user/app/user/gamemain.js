@@ -23,7 +23,7 @@ export default function GameMainScreen() {
   const [lives, setLives] = useState(Number(initialLives)); //현재 목숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
-  const BASE_URL = 'http://192.168.0.46:8080'; // 공통으로 빼두기
+  const BASE_URL = 'http://172.18.37.167:8080'; // 공통으로 빼두기
 
 
   useEffect(() => {
@@ -48,17 +48,24 @@ export default function GameMainScreen() {
 
         const data = response.data;
 
-        let total = 0;
-        const transformed = data.map((item) => {
-          total += item.inputCount;
-          return {
-            date: item.inputTime.split("T")[0],
-            count: item.inputCount.toString(),
-            total: total.toString(),
-          };
-        });
+       // ✅ 1. 날짜 오름차순 정렬 (오래된 → 최신)
+      const sorted = [...data].sort(
+        (a, b) => new Date(a.inputTime) - new Date(b.inputTime)
+      );
 
-        setRecycleData(transformed.reverse()); //최신순 정렬
+      // ✅ 2. 누적(total) 계산
+      let total = 0;
+      const transformed = sorted.map((item) => {
+        total += item.inputCount;
+        return {
+          date: item.inputTime.split("T")[0],
+          count: item.inputCount.toString(),
+          total: total.toString(),
+        };
+      });
+
+      // ✅ 3. 최신순으로 보고 싶으면 여기서 reverse()
+      setRecycleData(transformed.reverse());
         setTotalRecycleCount(total);
       } catch (error) {
         console.error("재활용 내역 불러오기 실패", error);
@@ -348,13 +355,15 @@ useEffect(() => {
 
             {/* 표 내용 */}
             <ScrollView style={styles.scrollView}>
-              {recycleData.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.rowCell}>{item.date}</Text>
-                  <Text style={styles.rowCell}>{item.count}</Text>
-                  <Text style={styles.rowCell}>{item.total}</Text>
-                </View>
-              ))}
+              {[...recycleData]
+                .sort((a, b) => new Date(b.date) - new Date(a.date)) // 최신 날짜부터
+                .map((item, index) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={styles.rowCell}>{item.date}</Text>
+                    <Text style={styles.rowCell}>{item.count}</Text>
+                    <Text style={styles.rowCell}>{item.total}</Text>
+                  </View>
+                ))}
             </ScrollView>
           </View>
         </View>
