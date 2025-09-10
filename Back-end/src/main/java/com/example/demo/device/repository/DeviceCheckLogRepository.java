@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface DeviceCheckLogRepository extends JpaRepository<DeviceCheckLog, Long> {
-
+        
     @Query("SELECT new com.example.demo.device.dto.DeviceCheckLogDto(" +
             "l.adminId.adminId, l.adminId.admName, l.actionType, l.logTime) " +
             "FROM DeviceCheckLog l " +
