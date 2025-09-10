@@ -268,5 +268,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
   },
+  // ✅ 로그아웃 버튼 관련 스타일 추가
+  logoutContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 20,
+  },
+  logoutButton: {
+    backgroundColor: "#f44336",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
 export default styles;

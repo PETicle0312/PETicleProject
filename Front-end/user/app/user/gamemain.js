@@ -6,10 +6,25 @@ import styles from "./styles/GameMainScreenStyles";
 import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
 import { useRoute } from "@react-navigation/native";
 import EventSource from 'react-native-event-source';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 
 export default function GameMainScreen() {
   const route = useRoute();
+  const navigation = useNavigation();
+  // 로그아웃 함수
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("userToken");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "login" }], // ← 네비게이터에 등록된 이름 맞춰주기
+      });
+    } catch (e) {
+      console.warn("로그아웃 에러:", e);
+    }
+  };
   const {
     userId = "guest",
     characterName = "blue",
@@ -23,7 +38,7 @@ export default function GameMainScreen() {
   const [lives, setLives] = useState(Number(initialLives)); //현재 목숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
-  const BASE_URL = 'http://172.18.37.167:8080'; // 공통으로 빼두기
+  const BASE_URL = 'http://192.168.10.5:8080'; // 공통으로 빼두기
 
 
   useEffect(() => {
@@ -289,6 +304,12 @@ useEffect(() => {
                   )}
                 </Pressable>
               ))}
+            </View>
+
+            <View style={styles.logoutContainer}>
+              <Pressable onPress={handleLogout} style={styles.logoutButton}>
+                <Text style={styles.logoutText}>로그아웃</Text>
+              </Pressable>
             </View>
           </View>
         </View>
