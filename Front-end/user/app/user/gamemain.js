@@ -38,7 +38,7 @@ export default function GameMainScreen() {
   const [lives, setLives] = useState(Number(initialLives)); //현재 목숨
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
-  const BASE_URL = 'http://172.18.38.26:8080'; // 공통으로 빼두기
+  const BASE_URL = 'http://172.30.1.53:8080'; // 공통으로 빼두기
 
 
   useEffect(() => {

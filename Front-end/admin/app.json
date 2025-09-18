@@ -8,9 +8,9 @@
     "scheme": "peticleapp",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-     "statusBar": {
-        "hidden": true
-      },    
+    "statusBar": {
+      "hidden": true
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +19,8 @@
         "foregroundImage": "ios./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.peticleapp"
     },
     "web": {
       "bundler": "metro",
