@@ -1,30 +1,38 @@
 import { FontAwesome } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import styles from "./styles/GameMainScreenStyles";
-import axios from "axios"; // ← 백엔드 API 요청을 위해 추가
-import { useRoute } from "@react-navigation/native";
-import EventSource from 'react-native-event-source';
+import axios from "axios";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
 
+const BASE_URL = "http://192.168.123.100:8080";
+const DEVICE_API = BASE_URL;
 
 export default function GameMainScreen() {
   const route = useRoute();
   const navigation = useNavigation();
-  // 로그아웃 함수
+
+  // ===== 로그아웃 =====
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("userToken");
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "login" }], // ← 네비게이터에 등록된 이름 맞춰주기
-      });
+      navigation.reset({ index: 0, routes: [{ name: "login" }] });
     } catch (e) {
       console.warn("로그아웃 에러:", e);
     }
   };
+
+  // ===== 라우트 파라미터 =====
   const {
     userId = "guest",
     characterName = "blue",
@@ -32,15 +40,19 @@ export default function GameMainScreen() {
     recycleCount = 0,
     highestScore = 0,
   } = route.params || {};
+
+  // ===== 상태값 =====
   const [modalType, setModalType] = useState(null);
-  const [selectedCharacter, setSelectedCharacter] = useState("blue");
+  const [selectedCharacter, setSelectedCharacter] = useState(
+    characterName || "blue"
+  );
   const [recycleData, setRecycleData] = useState([]);
-  const [lives, setLives] = useState(Number(initialLives)); //현재 목숨
+  const [lives, setLives] = useState(initialLives);
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
-  const BASE_URL = 'http://172.30.1.53:8080'; // 공통으로 빼두기
+  const [busy, setBusy] = useState(false);
 
-
+  // ===== 화면 방향 설정 =====
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
     return () => {
@@ -50,107 +62,101 @@ export default function GameMainScreen() {
     };
   }, []);
 
+  // ===== 재활용 내역 불러오기 =====
   useEffect(() => {
     const fetchRecycleData = async () => {
       try {
-        // ✅ 요청 보내기 전 확인 로그!
         console.log("📡 재활용 내역 요청 보냄:", userId);
-
         const response = await axios.get(
-          `${BASE_URL}/api/device/logs/${userId}` /*개인포트변경*/,
-          { timeout: 20000 }
+          `${DEVICE_API}/api/device/logs/${userId}`,
+          {
+            timeout: 20000,
+          }
         );
 
         const data = response.data;
+        let total = 0;
+        const transformed = data.map((item) => {
+          total += item.inputCount;
+          return {
+            date: item.inputTime.split("T")[0],
+            count: item.inputCount.toString(),
+            total: total.toString(),
+          };
+        });
 
-       // ✅ 1. 날짜 오름차순 정렬 (오래된 → 최신)
-      const sorted = [...data].sort(
-        (a, b) => new Date(a.inputTime) - new Date(b.inputTime)
-      );
-
-      // ✅ 2. 누적(total) 계산
-      let total = 0;
-      const transformed = sorted.map((item) => {
-        total += item.inputCount;
-        return {
-          date: item.inputTime.split("T")[0],
-          count: item.inputCount.toString(),
-          total: total.toString(),
-        };
-      });
-
-      // ✅ 3. 최신순으로 보고 싶으면 여기서 reverse()
-      setRecycleData(transformed.reverse());
+        setRecycleData(transformed.reverse());
         setTotalRecycleCount(total);
       } catch (error) {
         console.error("재활용 내역 불러오기 실패", error);
       }
     };
 
-    fetchRecycleData();
-  }, []);
-
-
-useEffect(() => {
-  // ✅ 앱 처음 들어왔을 때 초기값 설정
-  setLives(Number(initialLives));
-
-  // ✅ SSE 구독 추가
-  const es = new EventSource(`${BASE_URL}/api/sse/lives/${userId}`);
-
-  es.addEventListener("lives", (e) => {
-    try {
-      const data = JSON.parse(e.data); 
-      setLives(data.totalLives); // 실시간 반영
-      if (typeof data.totalRecycleCount === "number") {
-      setTotalRecycleCount(data.totalRecycleCount);
-      }
-    } catch (err) {
-      console.warn("SSE parse error", err);
+    if (userId && userId !== "guest") {
+      fetchRecycleData();
     }
-  });
+  }, [userId]);
 
-  es.onerror = (err) => {
-    console.error("SSE error:", err);
-    // 필요하면 재연결 로직 추가 가능
-  };
+  // ===== 초기 목숨 반영 =====
+  useEffect(() => {
+    setLives(Number(initialLives));
+  }, [initialLives]);
 
-  return () => {
-    es.close(); // 언마운트 시 정리
-  };
-}, [initialLives, userId]);
-
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.date}</Text>
-      <Text style={styles.cell}>{item.count}개</Text>
-      <Text style={styles.cell}>{item.total}개</Text>
-    </View>
-  );
-
-  // ✅ [추가] 게임 결과 POST 요청 함수
-  /* 
-  const submitGameResult = async () => {
+  // ===== 서버에서 하트 수 조회 =====
+  const fetchLives = async () => {
+    if (!userId || userId === "guest") return;
     try {
-      const response = await axios.post(
-        "${BASE_URL}/game/result" 개인포트변경,
-        {
-          userId: userId,
-          classificationResult: "CLEAN", // 예: CLEAN, WRONG, UNKNOWN
-        }
+      const { data } = await axios.get(`${BASE_URL}/users/lives`, {
+        params: { userId },
+        timeout: 10000,
+      });
+      setLives(Number(data));
+    } catch (e) {
+      console.log("하트 조회 실패:", e?.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchLives();
+  }, [userId]);
+
+  // ===== 게임 시작 (PLAY 버튼) =====
+  const handlePlay = async () => {
+    if (!userId || userId === "guest") {
+      Alert.alert("안내", "로그인이 필요합니다.");
+      return;
+    }
+    if (Number(lives) <= 0) {
+      Alert.alert("하트 부족 💔", "하트가 부족합니다", [{ text: "확인" }]);
+      return;
+    }
+
+    try {
+      setBusy(true);
+      const { data: remaining } = await axios.post(
+        `${BASE_URL}/users/lives/consume`,
+        null,
+        { params: { userId }, timeout: 10000 }
       );
 
-      const result = response.data;
-      setScore(result.score);
-      setLives(result.totalLives);
-      //fetchRecycleData();
-    } catch (error) {
-      console.error("❌ 게임 결과 전송 실패", error);
+      setLives(Number(remaining));
+      console.log("게임 시작! 남은 하트:", remaining);
+
+      // TODO: Unity 화면 이동
+      // navigation.navigate("UnityScreen");
+    } catch (e) {
+      if (e?.response?.status === 409) {
+        setLives(0);
+        Alert.alert("하트 부족 💔", "하트가 부족합니다");
+      } else {
+        Alert.alert("에러", String(e?.message ?? "네트워크 오류"));
+      }
+    } finally {
+      setBusy(false);
     }
-  }; 
-  */
- 
-  //캐릭터 선택
+  };
+
+  // ===== 캐릭터 리스트 =====
   const characters = [
     { id: "blue", image: require("../../assets/images/bluehead.png") },
     { id: "orange", image: require("../../assets/images/orangehead.png") },
@@ -158,7 +164,7 @@ useEffect(() => {
     { id: "green", image: require("../../assets/images/greenhead.png") },
   ];
 
-  // 순위현황데이터
+  // ===== 랭킹 더미 데이터 =====
   const rankingData = [
     { id: "peticle0312", score: "10,240" },
     { id: "peticle0312", score: "10,240" },
@@ -167,27 +173,16 @@ useEffect(() => {
     { id: "peticle0312", score: "1,240" },
   ];
 
-  // 재활용데이터
-  // recycleData = [
-  //   { date: "2024-06-01", count: "1", total: "12" },
-  //   { date: "2024-06-01", count: "1", total: "11" },
-  //   { date: "2024-06-01", count: "2", total: "10" },
-  //   { date: "2024-06-01", count: "2", total: "9" },
-  //   { date: "2024-06-01", count: "2", total: "7" },
-  //   { date: "2024-06-01", count: "1", total: "5" },
-  //   { date: "2024-06-01", count: "1", total: "3" },
-  // ];
-
   return (
     <View style={styles.container}>
-      {/* 캐릭터 배경 */}
+      {/* 배경 */}
       <Image
         source={require("../../assets/images/gamebackground.png")}
         style={styles.background}
         resizeMode="contain"
       />
 
-      {/* 상단 정보 바 */}
+      {/* 상단 정보바 */}
       <View style={styles.statusBar}>
         {/* 프로필 */}
         <Pressable onPress={() => setModalType("profile")}>
@@ -200,9 +195,9 @@ useEffect(() => {
           </View>
         </Pressable>
 
-        {/* 스탯들 */}
+        {/* 스탯 */}
         <View style={styles.statsContainer}>
-          {/* 목숨 */}
+          {/* 하트 */}
           <View style={styles.statGroup}>
             <View style={styles.iconCircle}>
               <FontAwesome name="heart" size={20} color="red" />
@@ -254,27 +249,31 @@ useEffect(() => {
       {modalType === null && (
         <View style={styles.centerWrapper}>
           <Pressable
-            onPress={() => console.log("게임 시작")}
+            onPress={handlePlay}
+            disabled={busy}
             style={({ pressed }) => [
               styles.playButton,
               pressed && styles.playButtonPressed,
+              busy && { opacity: 0.6 },
             ]}
           >
-            <Image
-              source={require("../../assets/images/play.png")}
-              style={styles.playImage}
-              resizeMode="contain"
-            />
+            {busy ? (
+              <ActivityIndicator />
+            ) : (
+              <Image
+                source={require("../../assets/images/play.png")}
+                style={styles.playImage}
+                resizeMode="contain"
+              />
+            )}
           </Pressable>
         </View>
       )}
 
-      {/* ---------------------------------------------------------------------------------------------------------------------- */}
       {/* 프로필 모달 */}
       {modalType === "profile" && (
         <View style={styles.modalOverlay}>
           <View style={styles.characterModal}>
-            {/* 상단 헤더 */}
             <View style={styles.charactermodalHeader}>
               <Text style={styles.charactermodalTitle}>
                 PETicle 캐릭터 선택
@@ -284,12 +283,15 @@ useEffect(() => {
               </Pressable>
             </View>
 
-            {/* 캐릭터 선택 라인 */}
+            {/* 캐릭터 선택 */}
             <View style={styles.characterRow}>
               {characters.map((char, index) => (
                 <Pressable
                   key={index}
-                  onPress={() => setSelectedCharacter(char.id)}
+                  onPress={() => {
+                    setSelectedCharacter(char.id);
+                    console.log("👉 선택된 캐릭터:", char.id);
+                  }}
                   style={styles.characterOption}
                 >
                   <Image source={char.image} style={styles.characterImage} />
@@ -306,6 +308,7 @@ useEffect(() => {
               ))}
             </View>
 
+            {/* 로그아웃 버튼 */}
             <View style={styles.logoutContainer}>
               <Pressable onPress={handleLogout} style={styles.logoutButton}>
                 <Text style={styles.logoutText}>로그아웃</Text>
@@ -315,12 +318,10 @@ useEffect(() => {
         </View>
       )}
 
-      {/*순위 모달 */}
-
+      {/* 랭킹 모달 */}
       {modalType === "ranking" && (
         <View style={styles.modalOverlay}>
           <View style={styles.rankingModal}>
-            {/* 헤더 */}
             <View style={styles.modalHeader}>
               <View style={styles.headerTopRow}>
                 <Text style={styles.modalTitle}>RANKING</Text>
@@ -333,14 +334,12 @@ useEffect(() => {
               </Text>
             </View>
 
-            {/* 표 헤더 */}
             <View style={styles.tableHeader}>
               <Text style={styles.headerCell}>순위</Text>
               <Text style={styles.headerCell}>아이디</Text>
               <Text style={styles.headerCell}>점수</Text>
             </View>
 
-            {/* 표 내용 */}
             <ScrollView style={styles.scrollView}>
               {rankingData.map((item, index) => (
                 <View key={index} style={styles.tableRow}>
@@ -354,7 +353,7 @@ useEffect(() => {
         </View>
       )}
 
-      {/* 페트병 모달 */}
+      {/* 수거 내역 모달 */}
       {modalType === "recycle" && (
         <View style={styles.modalOverlay}>
           <View style={styles.rankingModal}>
@@ -367,24 +366,20 @@ useEffect(() => {
               </View>
             </View>
 
-            {/* 표 헤더 */}
             <View style={styles.tableHeader}>
               <Text style={styles.headerCell}>날짜</Text>
               <Text style={styles.headerCell}>오늘의 PET 개수</Text>
               <Text style={styles.headerCell}>누적 수거량</Text>
             </View>
 
-            {/* 표 내용 */}
             <ScrollView style={styles.scrollView}>
-              {[...recycleData]
-                .sort((a, b) => new Date(b.date) - new Date(a.date)) // 최신 날짜부터
-                .map((item, index) => (
-                  <View key={index} style={styles.tableRow}>
-                    <Text style={styles.rowCell}>{item.date}</Text>
-                    <Text style={styles.rowCell}>{item.count}</Text>
-                    <Text style={styles.rowCell}>{item.total}</Text>
-                  </View>
-                ))}
+              {recycleData.map((item, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={styles.rowCell}>{item.date}</Text>
+                  <Text style={styles.rowCell}>{item.count}</Text>
+                  <Text style={styles.rowCell}>{item.total}</Text>
+                </View>
+              ))}
             </ScrollView>
           </View>
         </View>
