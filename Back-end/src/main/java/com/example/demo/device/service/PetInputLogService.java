@@ -67,7 +67,13 @@ public class PetInputLogService {
     // ✅ SSE로 실시간 푸시 (userId는 String 기준)
     sse.publishLives(
     user.getUserId(),
-    new LivesDto(user.getUserId(), user.getTotalLives(), totalRecycleCount) // LivesDto(userId, totalLives, totalRecycleCount)
+    new LivesDto(
+        user.getUserId(),
+        user.getTotalLives(),
+        totalRecycleCount,
+        LocalDateTime.now(),
+        dto.getInputCount() )
+         // LivesDto(userId, totalLives, totalRecycleCount)
 );
 //-----------------------------------------------------------------------------------
         return "success";

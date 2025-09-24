@@ -14,8 +14,10 @@ import styles from "./styles/GameMainScreenStyles";
 import axios from "axios";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import EventSource from "react-native-event-source";
 
-const BASE_URL = "http://192.168.123.100:8080";
+
+const BASE_URL = "http://172.18.35.176:8080";
 const DEVICE_API = BASE_URL;
 
 export default function GameMainScreen() {
@@ -75,16 +77,24 @@ export default function GameMainScreen() {
         );
 
         const data = response.data;
+
+        // 1. 날짜 오래된 순으로 정렬 (누적 계산을 위해)
+        const sorted = [...data].sort(
+          (a, b) => new Date(a.inputTime) - new Date(b.inputTime)
+        );
+
+        // 2. 누적(total) 계산
         let total = 0;
-        const transformed = data.map((item) => {
+        const transformed = sorted.map((item) => {
           total += item.inputCount;
           return {
-            date: item.inputTime.split("T")[0],
+            date: item.inputTime.split("T")[0], // 날짜만
             count: item.inputCount.toString(),
             total: total.toString(),
           };
         });
 
+        // 3. 최신순으로 뒤집어서 저장 (맨 위가 가장 최근, 누적이 제일 큼)
         setRecycleData(transformed.reverse());
         setTotalRecycleCount(total);
       } catch (error) {
@@ -97,28 +107,50 @@ export default function GameMainScreen() {
     }
   }, [userId]);
 
+
   // ===== 초기 목숨 반영 =====
   useEffect(() => {
     setLives(Number(initialLives));
   }, [initialLives]);
 
-  // ===== 서버에서 하트 수 조회 =====
-  const fetchLives = async () => {
-    if (!userId || userId === "guest") return;
-    try {
-      const { data } = await axios.get(`${BASE_URL}/users/lives`, {
-        params: { userId },
-        timeout: 10000,
-      });
-      setLives(Number(data));
-    } catch (e) {
-      console.log("하트 조회 실패:", e?.message);
-    }
-  };
-
+  // ===== SSE로 lives / recycleCount / recycleData 실시간 반영 =====
   useEffect(() => {
-    fetchLives();
+    if (!userId || userId === "guest") return;
+
+    const es = new EventSource(`${BASE_URL}/api/sse/lives/${userId}`);
+
+    es.addEventListener("lives", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+
+        // 1. lives / totalRecycleCount 갱신
+        setLives(data.totalLives);
+        setTotalRecycleCount(data.totalRecycleCount);
+
+        // 2. 새 로그 있으면 리스트에 추가
+        if (data.inputTime && data.inputCount) {
+          setRecycleData((prev) => {
+            const newRow = {
+              date: data.inputTime.split("T")[0],
+              count: String(data.inputCount),
+              total: String(data.totalRecycleCount),
+            };
+            return [newRow, ...prev]; // 최신 데이터가 맨 위로
+          });
+        }
+      } catch (err) {
+        console.warn("SSE parse error", err);
+      }
+    });
+
+    es.onerror = (err) => {
+      console.error("SSE error:", err);
+    };
+
+    return () => es.close();
   }, [userId]);
+
+
 
   // ===== 게임 시작 (PLAY 버튼) =====
   const handlePlay = async () => {

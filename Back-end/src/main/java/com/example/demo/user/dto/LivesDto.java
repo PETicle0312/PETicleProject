@@ -1,6 +1,8 @@
 // src/main/java/com/example/demo/user/dto/LivesDto.java
 package com.example.demo.user.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,5 +12,6 @@ public class LivesDto {
     private String userId;
     private int totalLives;
     private int totalRecycleCount;
-    // 필요하면 필드 더 추가 (ex. totalCount 등)
+    private LocalDateTime inputTime;
+    private int inputCount;
 }
