@@ -71,6 +71,7 @@ public class UserServiceImpl implements UserService {
                 3, // totalLives
                 dto.getStudentNumber(), // studentNumber
                 school // school (방금 조회한 학교)
+, null, null
         );
 
         // 저장

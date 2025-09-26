@@ -1,10 +1,10 @@
 package com.example.demo.game.entity;
 
 import com.example.demo.user.entity.User;
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,28 +17,25 @@ import java.time.LocalDateTime;
 public class GameSession {
 
     @Id
-    @GeneratedValue( strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "session_id")
     private Long sessionId;
 
-    @Column( nullable = false)
+    /** 이 판에서 획득한 점수 */
+    @Column(nullable = false)
     private int score;
 
-    @Column(name="play_time", nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime playTime; // yyyy-MM-dd HH:mm:ss 형태 추천
+    /** 실제 플레이 시간(초 단위) */
+    @Column(name = "play_time_sec")
+    private Integer playTimeSec;
 
-       // 필요시 생성자에 기본값 설정
-    public void addScore(int amount) {
-        this.score += amount;
-    }
-
-    @Column(nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    /** 기록 생성 시각 (자동 입력) */
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne
+    /** 어떤 사용자가 플레이했는지 (FK: user_id) */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
-
+    private User user;
 }

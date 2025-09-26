@@ -1,6 +1,10 @@
 package com.example.demo.user.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.example.demo.game.entity.ScoreLog;
 import com.example.demo.school.entity.SchoolEntity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -11,7 +15,7 @@ import lombok.*;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-
+@Builder
 public class User {
 
     @Id
@@ -51,19 +55,32 @@ public class User {
     @JoinColumn(name = "school_id")
     private SchoolEntity school;
 
-    // 비밀번호를 암호화해서 저장하도록 추가
+    /** 누적 점수 (게임 + 오픈API 호출 등 모든 가산점) */
+    @Column(name = "score", nullable = false)
+    private Integer score;
+
+    /**
+     * 엔티티가 처음 저장될 때 실행되는 콜백
+     * - 비밀번호 암호화
+     * - score 기본값 0
+     * - registerDate 기본값 현재 시간
+     */
     @PrePersist
-    public void encryptPassword() {
+    public void onCreate() {
         if (this.password != null) {
-            // 비밀번호 암호화 처리, 예를 들어 BCrypt 사용
-            this.password = encryptPassword(this.password); // 암호화 메서드 필요
+            this.password = encryptPassword(this.password);
         }
+        if (score == null) score = 0;
+        if (registerDate == null) registerDate = LocalDateTime.now();
     }
 
-    // 예시로 비밀번호를 암호화하는 메서드
+    // 실제 암호화 로직 (예: BCryptPasswordEncoder)
     private String encryptPassword(String password) {
-        // 실제 암호화 로직을 추가해야 합니다.
-        // 예시로 BCrypt를 사용할 수 있습니다.
-        return password; // 암호화된 비밀번호로 반환해야 합니다.
+        // TODO: BCrypt 같은 암호화 로직 적용 필요
+        return password; // 현재는 그대로 리턴 (팀원 로직 확인 후 수정)
     }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ScoreLog> scoreLogs = new ArrayList<>();
+
 }
