@@ -3,6 +3,8 @@ package com.example.demo.openapi.controller;
 
 import com.example.demo.openapi.dto.*;
 import com.example.demo.openapi.service.OpenPetInputService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -19,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/open/v1")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "x-user-id")  
 @Tag(name = "Open API - PET 입력")
 public class OpenPetInputController {
 

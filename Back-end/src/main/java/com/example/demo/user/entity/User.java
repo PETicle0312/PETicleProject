@@ -57,7 +57,7 @@ public class User {
 
     /** 누적 점수 (게임 + 오픈API 호출 등 모든 가산점) */
     @Column(name = "score", nullable = false)
-    private Integer score;
+    private Integer score = 0;
 
     /**
      * 엔티티가 처음 저장될 때 실행되는 콜백

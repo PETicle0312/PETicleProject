@@ -4,6 +4,7 @@ package com.example.demo.openapi.controller;
 import com.example.demo.openapi.dto.SchoolSimpleDto;
 import com.example.demo.openapi.service.OpenSchoolService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/open/v1")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "x-user-id")  
 @Tag(name = "Open API - 학교 검색")
 public class OpenSchoolController {
 
