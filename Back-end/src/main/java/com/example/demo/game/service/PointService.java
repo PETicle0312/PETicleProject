@@ -1,9 +1,12 @@
 package com.example.demo.game.service;
 
+import com.example.demo.common.dto.PointEventDto;
+import com.example.demo.common.sse.LivesSseManager;
 import com.example.demo.game.entity.ScoreLog;
 import com.example.demo.game.repository.ScoreLogRepository;
 import com.example.demo.user.entity.User;
 import com.example.demo.user.repository.UserRepository;
+
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +22,14 @@ public class PointService {
 
     private final ScoreLogRepository scoreLogRepository;
     private final UserRepository userRepository;
+    private final LivesSseManager livesSseManager; 
+    
 
     /**
      * Open API 호출 시 포인트 지급 로직
      */
     @Transactional
-    public void addPointForApiCall(String userId, String uri) {
+    public int addPointForApiCall(String userId, String uri) {
         LocalDate today = LocalDate.now();
         LocalDateTime start = today.atStartOfDay();
         LocalDateTime end = start.plusDays(1);
@@ -36,7 +41,7 @@ public class PointService {
         // 오늘 호출한 로그 확인
         List<ScoreLog> todayLogs = scoreLogRepository.findByUserAndCreatedAtBetween(user, start, end);
         if (todayLogs.size() >= 3) {
-            return; // 이미 3회 다 사용했으면 포인트 지급 안 함
+            return 0; // 이미 3회 다 사용했으면 포인트 지급 안 함
         }
 
         // 호출 횟수에 따른 점수
@@ -60,7 +65,11 @@ public class PointService {
         if (updated == 0) {
             throw new IllegalStateException("Score update failed for uid=" + userId);
         }
-        
+
+        // ✅ 포인트 지급 후 SSE 알림 전송
+        livesSseManager.publishPoints(userId, new PointEventDto(points, user.getScore()));
+
+        return points; // ✅ 이번에 지급된 포인트 반환
     }
     public void migrateScores() {
     int updated = userRepository.syncUserScores();

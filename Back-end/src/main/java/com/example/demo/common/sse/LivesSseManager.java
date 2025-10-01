@@ -33,6 +33,20 @@ public class LivesSseManager {
         list.removeAll(dead);
     }
 
+    /** ✅ 포인트 지급 이벤트 전송 */
+    public void publishPoints(String userId, Object payload) {
+        var list = emitters.getOrDefault(userId, new CopyOnWriteArrayList<>());
+        var dead = new ArrayList<SseEmitter>();
+        for (SseEmitter s : list) {
+            try {
+                s.send(SseEmitter.event().name("points").data(payload));
+            } catch (Exception e) {
+                dead.add(s);
+            }
+        }
+        list.removeAll(dead);
+    }
+
     private void remove(String userId, SseEmitter emitter) {
         var list = emitters.get(userId);
         if (list != null) list.remove(emitter);

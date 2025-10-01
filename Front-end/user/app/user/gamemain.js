@@ -17,12 +17,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import EventSource from "react-native-event-source";
 
 
-const BASE_URL = "http://172.18.35.176:8080";
+const BASE_URL = "http://172.18.33.53:8080";
 const DEVICE_API = BASE_URL;
 
 export default function GameMainScreen() {
   const route = useRoute();
   const navigation = useNavigation();
+  const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
 
   // ===== 로그아웃 =====
   const handleLogout = async () => {
@@ -137,17 +140,53 @@ export default function GameMainScreen() {
             };
             return [newRow, ...prev]; // 최신 데이터가 맨 위로
           });
+
+          // 🔔 알림 리스트에도 추가
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              text: `PET ${data.inputCount}개 수거됨!`,
+              read: false,
+            },
+            ...prev,
+          ]);
         }
       } catch (err) {
         console.warn("SSE parse error", err);
       }
     });
 
+    // ✅ 새로운 reward 이벤트 수신
+    es.addEventListener("points", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        setNotifications((prev) => [
+          {
+            id: Date.now(),
+            text: `API 호출로 ${data.addedPoints} 포인트 지급! (총: ${data.currentPoints})`,
+            read: false,
+          },
+          ...prev,
+        ]);
+      } catch (err) {
+        console.warn("SSE points parse error", err);
+      }
+    });
+
+
     es.onerror = (err) => {
       console.error("SSE error:", err);
     };
 
-    return () => es.close();
+    return () => {
+      if (es) {
+        try {
+          es.close();
+        } catch (err) {
+          console.warn("SSE close error", err);
+        }
+      }
+    };
   }, [userId]);
 
 
@@ -215,20 +254,51 @@ export default function GameMainScreen() {
       />
 
       {/* 상단 정보바 */}
-      <View style={styles.statusBar}>
-        {/* 프로필 */}
-        <Pressable onPress={() => setModalType("profile")}>
-          <View style={styles.profileContainer}>
-            <Image
-              source={require("../../assets/images/greenhead.png")}
-              style={styles.profileImage}
-            />
-            <Text style={styles.profileText}>{userId}</Text>
-          </View>
-        </Pressable>
+      <View style={[styles.statusBar, { flexDirection: "row", alignItems: "center" }]}>
+        {/* 왼쪽 그룹: 프로필 + 알림 */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* 프로필 */}
+          <Pressable onPress={() => setModalType("profile")}>
+            <View style={styles.profileContainer}>
+              <Image
+                source={require("../../assets/images/greenhead.png")}
+                style={styles.profileImage}
+              />
+              <Text style={styles.profileText}>{userId}</Text>
+            </View>
+          </Pressable>
 
-        {/* 스탯 */}
-        <View style={styles.statsContainer}>
+          {/* 알림 아이콘 */}
+          <Pressable
+            onPress={() => setModalType("notifications")}
+            style={{ marginLeft: 12, position: "relative" }}
+          >
+            <FontAwesome name="envelope" size={28} color="#fff" />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  right: -6,
+                  top: -6,
+                  backgroundColor: "red",
+                  borderRadius: 10,
+                  minWidth: 16,
+                  height: 16,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingHorizontal: 2,
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 11, fontWeight: "bold" }}>
+                  {unreadCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+
+        {/* 오른쪽 그룹: 스탯 */}
+        <View style={[styles.statsContainer, { marginLeft: "auto" }]}>
           {/* 하트 */}
           <View style={styles.statGroup}>
             <View style={styles.iconCircle}>
@@ -416,6 +486,47 @@ export default function GameMainScreen() {
           </View>
         </View>
       )}
+
+      {/* 알림 모달 */}
+    {modalType === "notifications" && (
+      <View style={styles.modalOverlay}>
+        <View style={styles.rankingModal}>
+          <View style={styles.modalHeader}>
+            <View style={styles.headerTopRow}>
+              <Text style={styles.modalTitle}>알림</Text>
+              <Pressable
+                onPress={() => {
+                  // 닫을 때 전체 읽음 처리
+                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                  setModalType(null);
+                }}
+              >
+                <Text style={{ fontSize: 22 }}>✕</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <ScrollView style={styles.scrollView}>
+            {notifications.length === 0 ? (
+              <Text style={{ padding: 10, color: "#888" }}>알림이 없습니다.</Text>
+            ) : (
+              notifications.map((n) => (
+                <Text
+                  key={n.id}
+                  style={{
+                    fontSize: 16,
+                    marginBottom: 6,
+                    color: n.read ? "#888" : "#000",
+                  }}
+                >
+                  • {n.text}
+                </Text>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    )}
     </View>
   );
 }

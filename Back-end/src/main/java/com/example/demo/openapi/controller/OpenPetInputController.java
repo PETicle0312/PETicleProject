@@ -1,8 +1,11 @@
 // src/main/java/com/example/demo/openapi/controller/OpenPetInputController.java
 package com.example.demo.openapi.controller;
 
+import com.example.demo.game.service.PointService;
 import com.example.demo.openapi.dto.*;
 import com.example.demo.openapi.service.OpenPetInputService;
+import com.example.demo.user.entity.User;
+import com.example.demo.user.repository.UserRepository;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +29,9 @@ import java.util.List;
 public class OpenPetInputController {
 
     private final OpenPetInputService svc;
+    private final PointService pointService;
+    private final UserRepository userRepository;
+
 
     // ✅ 하나로 통합: from 없으면 전체, 있으면 해당 시점부터 합계
     // ✅ format=plain 지원(숫자만)
@@ -58,6 +64,22 @@ public class OpenPetInputController {
                                             @Min(1) @Max(50) int limit) {
         return svc.getUserRecentLogs(userId, limit);
     }
+
+    @PostMapping("/users/{userId}/reward")
+    public ResponseEntity<PointResponseDto> rewardForApiCall(
+            @PathVariable String userId,
+            @RequestParam String uri
+    ) {
+        int addedPoints = pointService.addPointForApiCall(userId, uri);
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        PointResponseDto response = new PointResponseDto(addedPoints, user.getScore());
+
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("/schools/{schoolId}/daily-stats")
     public List<DailyStatDto> dailyStats(@PathVariable Long schoolId) {
