@@ -1,98 +1,127 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // 아이콘 import
 const petIcon = require('../../assets/images/pet_icon.png');
 const arrowLeft = require('../../assets/images/arrow_left.png');
 
+const BASE_URL = "http://172.18.38.26:8080"; // 
+
+// 시간 포맷 함수
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0시는 12로 표시
+
+  return `${year}-${month}-${day} ${hours}:${minutes}${ampm}`;
+};
+
 export default function AlarmScreen() {
-  // 알림 더미 데이터
-  const todayAlarms = [
-    {
-      key: 1,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-    {
-      key: 2,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-    {
-      key: 3,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-  ];
-  const oldAlarms = [
-    {
-      key: 4,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-    {
-      key: 5,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-    {
-      key: 6,
-      manager: 'QSD0052FG',
-      school: '대중세무고등학교',
-      time: '12분 전',
-      device: 'SDF254ER',
-    },
-  ];
-
-  // 알림 카드 컴포넌트
-  const renderAlarm = (alarm) => (
-    <View style={styles.alarmCard} key={alarm.key}>
-      <Image source={petIcon} style={styles.alarmIcon} />
-      <View style={styles.alarmTextBox}>
-        <View style={styles.alarmTitleRow}>
-          <Text style={styles.alarmManager}><Text style={{fontWeight:'bold'}}>관리자 {alarm.manager}</Text></Text>
-          <Text style={styles.alarmTime}>{alarm.time}</Text>
-        </View>
-        <Text style={styles.alarmMsg}>
-          {alarm.school} 페티클이 수거완료 되었습니다!
-        </Text>
-        <Text style={styles.alarmDevice}>페티클 번호 : {alarm.device}</Text>
-      </View>
-    </View>
-  );
-
+  const [todayAlarms, setTodayAlarms] = useState([]);
+  const [oldAlarms, setOldAlarms] = useState([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchAlarms = async () => {
+      try {
+        const adminId = await AsyncStorage.getItem("adminId");
+        if (!adminId) {
+          console.warn("⚠️ 관리자 ID 없음 (로그인 필요)");
+          return;
+        }
+
+        console.log("🟢 요청 URL:", `${BASE_URL}/api/admin/notifications?adminId=${adminId}`);
+
+        const res = await axios.get(`${BASE_URL}/api/admin/notifications?adminId=${adminId}`);
+        const alarms = res.data;
+
+        // 날짜 기준 분류
+        const now = new Date();
+        const today = alarms.filter(a => {
+          const created = new Date(a.logTime);
+          return created.toDateString() === now.toDateString();
+        });
+        const old = alarms.filter(a => {
+          const created = new Date(a.logTime);
+          return created.toDateString() !== now.toDateString();
+        });
+
+        setTodayAlarms(today);
+        setOldAlarms(old);
+      } catch (err) {
+        console.error("❌ 알림 불러오기 실패:", err);
+      }
+    };
+
+    fetchAlarms();
+  }, []);
+
   const onBack = () => {
     router.back();
   };
-  
+
+  // 알림 카드 컴포넌트
+  const renderAlarm = (alarm) => {
+    console.log("🟢 alarm.schoolName:", alarm.schoolName);
+    console.log("🟢 alarm.actionType:", alarm.actionType);
+
+    return (
+      <View style={styles.alarmCard} key={alarm.logId}>
+        <Image source={petIcon} style={styles.alarmIcon} />
+        <View style={styles.alarmTextBox}>
+          <View style={styles.alarmTitleRow}>
+            <Text style={styles.alarmManager}>
+              <Text style={{ fontWeight: 'bold' }}>관리자 {alarm.adminName}</Text>
+            </Text>
+            <Text style={styles.alarmTime}>
+              {formatDate(alarm.logTime)}
+            </Text>
+          </View>
+          <Text style={styles.alarmMsg}>
+            {(alarm.schoolName ?? "알 수 없는 학교")}의 페티클이 {alarm.actionType ?? "알 수 없는 동작"} 되었습니다.
+          </Text>
+          <Text style={styles.alarmDevice}>페티클 번호 : {alarm.deviceId}</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={{width: 40, alignItems: 'flex-start'}} onPress={onBack}>
+        <TouchableOpacity style={{ width: 40, alignItems: 'flex-start' }} onPress={onBack}>
           <Image source={arrowLeft} style={styles.arrowIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>알림</Text>
-        <View style={{width: 40}} /> {/* 오른쪽 여백용 */}
+        <View style={{ width: 40 }} /> {/* 오른쪽 여백용 */}
       </View>
 
-      <ScrollView contentContainerStyle={{paddingBottom:30}}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
         <Text style={styles.sectionTitle}>오늘 받은 알림</Text>
-        {todayAlarms.map(renderAlarm)}
-        <Text style={[styles.sectionTitle, {marginTop:28}]}>이전 알림</Text>
-        {oldAlarms.map(renderAlarm)}
+        {todayAlarms.length > 0 ? (
+          todayAlarms.map(renderAlarm)
+        ) : (
+          <Text style={{ marginLeft: 18, color: "#999" }}>오늘 알림이 없습니다.</Text>
+        )}
+
+        <Text style={[styles.sectionTitle, { marginTop: 28 }]}>이전 알림</Text>
+        {oldAlarms.length > 0 ? (
+          oldAlarms.map(renderAlarm)
+        ) : (
+          <Text style={{ marginLeft: 18, color: "#999" }}>이전 알림이 없습니다.</Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -108,18 +137,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom:16,
+    paddingBottom: 16,
     justifyContent: 'space-between',
-    borderBottomWidth:1,
-    borderBottomColor:'#ddd',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   arrowIcon: {
     width: 20,
     height: 20,
     resizeMode: 'contain',
     tintColor: '#888',
-    //position:'absolute',
-    //top: -12
   },
   headerTitle: {
     fontSize: 20,

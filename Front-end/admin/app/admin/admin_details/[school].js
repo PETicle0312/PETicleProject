@@ -75,7 +75,7 @@ export default function AdminDetailScreen() {
   const fetchLogs = async () => {
     try {
       const response = await axios.get(
-        `http://172.30.1.9:8080/api/device-logs/${deviceId}`,
+        `http://172.18.38.26:8080/api/device-logs/${deviceId}`,
         { params: { yearMonth: toYearMonth(selectedMonth) } }
       );
 
