@@ -4,3 +4,9 @@
 
 expo-env.d.ts
 # @end expo-cli
+
+node_modules/
+.expo/
+.expo-shared/
+npm-debug.log
+yarn-error.log

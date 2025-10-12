@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import EventSource from "react-native-event-source";
 
 
-const BASE_URL = "http://172.18.33.53:8080";
+const BASE_URL = "http://192.168.219.114:8080";
 const DEVICE_API = BASE_URL;
 
 export default function GameMainScreen() {

@@ -44,7 +44,7 @@ export default function RegisterScreen() {
   const [keyword, setKeyword] = useState("");
   const [region, setRegion] = useState("서울특별시"); // 기본 지역 설정
 
-  const BASE_URL = "http://172.18.33.53:8080"; // 공통으로 빼두기
+  const BASE_URL = "http://192.168.219.114:8080"; // 공통으로 빼두기
 
   // 학교 검색 API 호출
   const fetchSchools = async (keyword, region) => {

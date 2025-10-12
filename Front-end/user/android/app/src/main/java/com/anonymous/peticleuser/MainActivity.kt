@@ -1,4 +1,4 @@
-package com.anonymous.peticle
+package com.anonymous.peticleuser
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
