@@ -1,7 +1,20 @@
-# Backend
+# 공통
 node_modules/
 .env
-target/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+
+# 빌드 산출물
+dist/
+build/
+out/
+
 
 # Unity
 [Ll]ibrary/
