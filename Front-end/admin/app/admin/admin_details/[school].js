@@ -206,7 +206,7 @@ export default function AdminDetailScreen() {
   // ===== 화면 =====
   return (
     <View style={styles.container}>
-      {/* NFC 팝업 */}
+      {/* 수거하기 팝업 */}
       <Modal visible={showNfcPopup} transparent animationType="fade">
         <View style={styles.popupBackground}>
           <View style={styles.popupBox}>
