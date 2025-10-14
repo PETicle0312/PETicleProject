@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/peticle
+    url: jdbc:mariadb://localhost:3309/peticle
     username: root
     password: 1234 
               #1209

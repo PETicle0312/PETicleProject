@@ -67,7 +67,14 @@ public class PointService {
         }
 
         // ✅ 포인트 지급 후 SSE 알림 전송
-        livesSseManager.publishPoints(userId, new PointEventDto(points, user.getScore()));
+        System.out.println("✅ publishPoints 호출됨: " + userId + ", +" + points);
+        try {
+            int newTotal = user.getScore() + points; // 간단 계산(정확히 하려면 재조회)
+            livesSseManager.publishPoints(userId, new PointEventDto(points, newTotal));
+            System.out.println("✅ SSE 호출 완료");
+        } catch (Exception e) {
+            System.out.println("❌ SSE 호출 중 예외: " + e.getMessage());
+        }
 
         return points; // ✅ 이번에 지급된 포인트 반환
     }

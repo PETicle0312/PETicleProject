@@ -1,6 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Image,
   Pressable,
@@ -9,22 +9,33 @@ import {
   View,
   Alert,
   ActivityIndicator,
+  Animated,
+  Easing,
+  Dimensions,
+  Platform,
 } from "react-native";
 import styles from "./styles/GameMainScreenStyles";
 import axios from "axios";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import EventSource from "react-native-event-source";
+import EventSource from "react-native-sse";
 
 
-const BASE_URL = "http://192.168.219.114:8080";
+const BASE_URL = "https://interempire-cayla-arcanely.ngrok-free.dev"; //ngrok 사용
 const DEVICE_API = BASE_URL;
 
 export default function GameMainScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const [notifications, setNotifications] = useState([]);
+  const [toast, setToast] = useState(null); //토스트 메세지
   const unreadCount = notifications.filter(n => !n.read).length;
+  const idRef = useRef(0);
+  const makeId = () => {
+    idRef.current += 1;
+    return `${Date.now()}-${idRef.current}`; // 항상 유니크
+  };
+
 
 
   // ===== 로그아웃 =====
@@ -56,6 +67,55 @@ export default function GameMainScreen() {
   const [score, setScore] = useState(highestScore);
   const [totalRecycleCount, setTotalRecycleCount] = useState(recycleCount);
   const [busy, setBusy] = useState(false);
+
+  // 고유 ID는 이미 처리했으니, 이번엔 페이로드 중복만 막기
+  const lastSeenRef = useRef({ k: null, t: 0 });
+
+  function shouldAcceptOnce(obj, windowMs = 10000) {
+    try {
+      const k = JSON.stringify(obj);     // 페이로드를 해시처럼 사용
+      const now = Date.now();
+      if (!lastSeenRef.current || lastSeenRef.current.k !== k || (now - lastSeenRef.current.t) > windowMs) {
+        lastSeenRef.current = { k, t: now };
+        return true;                      // 처음 보거나 시간 창 넘어가면 허용
+      }
+      return false;                       // 동일 페이로드 재수신 → 무시
+    } catch {
+      return true;                        // 혹시 직렬화 실패하면 통과
+    }
+  }
+
+  // 상단 배너 애니메이션
+  const toastY = useRef(new Animated.Value(-120)).current; // 시작: 화면 위 밖
+  const screen = Dimensions.get("window");
+  const isLandscape = screen.width > screen.height;
+
+  // 토스트가 바뀔 때마다 애니메이션 (내려오기 → 잠시 표시 → 올라가기)
+  useEffect(() => {
+    if (!toast) return;
+    // 내려오기
+    Animated.timing(toastY, {
+      toValue: 0,
+      duration: 250,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      // 대기 후 올라가기
+      setTimeout(() => {
+        Animated.timing(toastY, {
+          toValue: -100,
+          duration: 250,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }).start(() => {
+          // 끝나면 메시지 클리어
+          // (다음 토스트 때 다시 내려올 수 있게)
+          // 필요하면 유지
+          // setToast(null);  // 자동 초기화 원하면 주석 해제
+        });
+      }, 2200);
+    });
+  }, [toast]);
 
   // ===== 화면 방향 설정 =====
   useEffect(() => {
@@ -119,12 +179,56 @@ export default function GameMainScreen() {
   // ===== SSE로 lives / recycleCount / recycleData 실시간 반영 =====
   useEffect(() => {
     if (!userId || userId === "guest") return;
+    
+    console.log(
+      "[SSE] connect to:",
+      `${BASE_URL}/api/sse/lives/${userId}?ngrok-skip-browser-warning=true`,
+      "userId=", userId
+    );
 
-    const es = new EventSource(`${BASE_URL}/api/sse/lives/${userId}`);
+    const es = new EventSource(
+      `${BASE_URL}/api/sse/lives/${userId}?ngrok-skip-browser-warning=true`
+    );
+
+    // ✅ 연결 로그 핸들러 두 개 (생성 직후 바로)
+    es.addEventListener("open", () => console.log("[SSE] open"));
+    es.addEventListener("connected", (e) =>
+      console.log("[SSE] connected:", e?.data)
+    );
+    es.onerror = (err) => {
+      console.error("SSE error:", err);
+      // iOS에서 문제 시 바로 눈으로 보이게
+      try { Alert.alert("SSE error", JSON.stringify(err)); } catch {}
+    };
+
+    es.onmessage = (e) => {
+      console.log("[SSE] message:", e.data);
+      try {
+        const p = JSON.parse(e.data);
+        const added = p.addedPoints ?? p.points ?? p.scoreGiven ?? p.delta ?? null;
+        const total = p.currentPoints ?? p.total ?? p.newTotal ?? p.score ?? null;
+        if (added !== null && total !== null && shouldAcceptOnce({ type:"points", added, total })) {
+
+          setNotifications((prev) => [
+            {
+              id: makeId(),
+              text: `OpenAPI 호출로 +${added} 포인트! (총 ${total})`,
+              read: false,
+            },
+            ...prev,
+          ]);
+          setToast(`OpenAPI 호출로 +${added} 포인트 지급! (총 ${total})`);
+          setTimeout(() => setToast(null), 2500);
+        }
+      } catch (_) {}
+    }; 
 
     es.addEventListener("lives", (e) => {
+      console.log("[SSE] lives raw:", e?.data);
+
       try {
         const data = JSON.parse(e.data);
+        if (!shouldAcceptOnce({ type:"lives", ...data })) return;
 
         // 1. lives / totalRecycleCount 갱신
         setLives(data.totalLives);
@@ -144,7 +248,7 @@ export default function GameMainScreen() {
           // 🔔 알림 리스트에도 추가
           setNotifications((prev) => [
             {
-              id: Date.now(),
+              id: makeId(),
               text: `PET ${data.inputCount}개 수거됨!`,
               read: false,
             },
@@ -156,18 +260,31 @@ export default function GameMainScreen() {
       }
     });
 
-    // ✅ 새로운 reward 이벤트 수신
+    // points 이벤트
     es.addEventListener("points", (e) => {
+      console.log("[SSE] points raw:", e?.data);
+
       try {
-        const data = JSON.parse(e.data);
+        const payload = JSON.parse(e.data);
+        // ✅ 백엔드 DTO 필드명이 다른 경우를 대비해 유연하게 처리
+        const added =
+          payload.addedPoints ?? payload.points ?? payload.scoreGiven ?? payload.delta ?? 0;
+        const total =
+          payload.currentPoints ?? payload.total ?? payload.newTotal ?? payload.score ?? 0;
+        if (!shouldAcceptOnce({ type:"points", added, total })) return;
+        
         setNotifications((prev) => [
           {
-            id: Date.now(),
-            text: `API 호출로 ${data.addedPoints} 포인트 지급! (총: ${data.currentPoints})`,
+            id: makeId(),
+            text: `OpenAPI 호출로 +${added} 포인트! (총 ${total})`,
             read: false,
           },
           ...prev,
         ]);
+
+        // 🔔 포인트 지급 즉시 화면에 작은 토스트 띄우기
+        setToast(`OpenAPI 호출로 +${added} 포인트 지급! (총 ${total})`);
+        setTimeout(() => setToast(null), 2500);
       } catch (err) {
         console.warn("SSE points parse error", err);
       }
@@ -488,45 +605,100 @@ export default function GameMainScreen() {
       )}
 
       {/* 알림 모달 */}
-    {modalType === "notifications" && (
-      <View style={styles.modalOverlay}>
-        <View style={styles.rankingModal}>
-          <View style={styles.modalHeader}>
-            <View style={styles.headerTopRow}>
-              <Text style={styles.modalTitle}>알림</Text>
-              <Pressable
-                onPress={() => {
-                  // 닫을 때 전체 읽음 처리
-                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-                  setModalType(null);
-                }}
-              >
-                <Text style={{ fontSize: 22 }}>✕</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          <ScrollView style={styles.scrollView}>
-            {notifications.length === 0 ? (
-              <Text style={{ padding: 10, color: "#888" }}>알림이 없습니다.</Text>
-            ) : (
-              notifications.map((n) => (
-                <Text
-                  key={n.id}
-                  style={{
-                    fontSize: 16,
-                    marginBottom: 6,
-                    color: n.read ? "#888" : "#000",
+      {modalType === "notifications" && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.rankingModal}>
+            <View style={styles.modalHeader}>
+              <View style={styles.headerTopRow}>
+                <Text style={styles.modalTitle}>알림</Text>
+                <Pressable
+                  onPress={() => {
+                    // 닫을 때 전체 읽음 처리
+                    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                    setModalType(null);
                   }}
                 >
-                  • {n.text}
-                </Text>
-              ))
-            )}
-          </ScrollView>
+                  <Text style={{ fontSize: 22 }}>✕</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <ScrollView style={styles.scrollView}>
+              {notifications.length === 0 ? (
+                <Text style={{ padding: 10, color: "#888" }}>알림이 없습니다.</Text>
+              ) : (
+                notifications.map((n) => (
+                  <Text
+                    key={n.id}
+                    style={{
+                      fontSize: 16,
+                      marginBottom: 6,
+                      color: n.read ? "#888" : "#000",
+                    }}
+                  >
+                    • {n.text}
+                  </Text>
+                ))
+              )}
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    )}
+      )}
+
+      {/* ✅ 상단 배너 토스트 */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0, // ✅ 화면 맨 위
+          left: 0,
+          right: 0,
+          alignItems: "center",
+          transform: [{ translateY: toastY }], // 애니메이션으로 내려옴
+          zIndex: 9999,
+        }}
+      >
+        {toast ? (
+          <View
+            style={{
+              // 상태바 높이 만큼 여백 (iPhone 안전영역 고려)
+              marginTop: Platform.OS === "ios" ? 44 : 30,
+              width: Math.min(Dimensions.get("window").width * 0.6, 520),
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 14,
+              backgroundColor: "rgba(255,255,255,0.95)", // 살짝 투명 흰색
+              borderWidth: 1,
+              borderColor: "#ddd",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 8,
+            }}
+          >
+            <FontAwesome name="bell" size={18} color="#333" />
+            <Text
+              numberOfLines={2}
+              style={{
+                color: "#222",
+                fontSize: 16,
+                fontWeight: "600",
+                marginLeft: 8,
+                includeFontPadding: false,
+                textAlign: "center",
+              }}
+            >
+              {toast}
+            </Text>
+          </View>
+        ) : null}
+      </Animated.View>
+
+
     </View>
   );
 }
