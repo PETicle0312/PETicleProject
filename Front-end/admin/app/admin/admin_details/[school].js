@@ -14,12 +14,14 @@ import {
   RefreshControl,
 } from "react-native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AdminDetailScreen() {
   // ===== 기본 세팅 =====
   const SCREEN_HEIGHT = Dimensions.get("window").height;
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const { school, address, deviceId } = useLocalSearchParams();
+  const { school, address, deviceId, loadRate } = useLocalSearchParams();
+  
   console.log("👉 school:", school);
   console.log("👉 address:", address);
   console.log("👉 deviceId:", deviceId);
@@ -29,7 +31,7 @@ export default function AdminDetailScreen() {
   const [checkLogs, setCheckLogs] = useState([]);
   const [refreshing, setRefreshing] = useState(false); //새로고침
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [percent, setPercent] = useState(90);
+  const [percent, setPercent] = useState(Number(loadRate) || 0);
 
   // ===== 최근 6개월 =====
   function generateRecentMonthsWithPeriod(count = 6) {
@@ -75,7 +77,7 @@ export default function AdminDetailScreen() {
   const fetchLogs = async () => {
     try {
       const response = await axios.get(
-        `http://172.18.38.26:8080/api/device-logs/${deviceId}`,
+        `http://172.30.1.66:8080/api/device-logs/${deviceId}`,
         { params: { yearMonth: toYearMonth(selectedMonth) } }
       );
 
@@ -152,6 +154,50 @@ export default function AdminDetailScreen() {
     return require("../../../assets/images/levelEmpty_icon.png");
   };
 
+    // ✅ 수거 완료 처리 함수
+  const handleConfirmCollection = async () => {
+    try {
+      const adminId = await AsyncStorage.getItem("adminId"); // 로그인 관리자 ID 가져오기
+
+      await axios.post("http://172.30.1.66:8080/api/device/reset-load", null, {
+        params: {
+          deviceId: deviceId,
+          adminId: adminId || "unknown",
+        },
+      });
+
+      alert("✅ 수거 완료! 적재율이 0%로 초기화되었습니다.");
+      setPercent(0); // UI 즉시 갱신
+      setShowNfcPopup(false); // 팝업 닫기
+    } catch (err) {
+      console.error("❌ 수거 완료 실패:", err);
+      alert("⚠️ 수거 완료 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  // ===== 실시간 퍼센트 갱신 (Polling 방식) =====
+  useEffect(() => {
+    const fetchPercent = async () => {
+      try {
+        const res = await axios.get(`http://172.30.1.66:8080/api/device-status/${deviceId}`);
+        if (res.data && typeof res.data.percent === "number") {
+          setPercent(res.data.percent);
+        }
+      } catch (e) {
+        console.error("❌ 적재율 불러오기 실패:", e);
+      }
+    };
+
+    // 즉시 1회 실행
+    fetchPercent();
+
+    // 5초마다 갱신
+    const interval = setInterval(fetchPercent, 5000);
+
+    // 화면 벗어나면 정리
+    return () => clearInterval(interval);
+  }, [deviceId]);
+
   // ===== 라우터 =====
   const router = useRouter();
   const onAlarm = () => router.push("/admin/alarm");
@@ -191,7 +237,7 @@ export default function AdminDetailScreen() {
             </View>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.confirmBtn} onPress={() => {}}>
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmCollection}>
                 <Text style={styles.confirmBtnText}>예</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowNfcPopup(false)}>
@@ -221,10 +267,6 @@ export default function AdminDetailScreen() {
           <Text style={styles.schoolTitle}>{school}</Text>
         </View>
 
-        <TouchableOpacity onPress={() => setShowNfcPopup(true)}>
-          <Text>테스트로 NFC 팝업 열기</Text>
-        </TouchableOpacity>
-
         <View style={styles.arcBox}>
           <View style={{ alignItems: "center", marginVertical: 10 }}>
             <Image source={getLevelIcon()} style={{ width: 160, height: 80, resizeMode: "contain" }} />
@@ -248,9 +290,18 @@ export default function AdminDetailScreen() {
             </Text>
           </View>
         </View>
+        
         <Text style={styles.deviceNum}>페티클 번호: PET-{deviceId}</Text>
-      </View>
 
+        {/* 수거하기 버튼 */}
+        <TouchableOpacity
+          style={styles.collectBtn}
+          onPress={() => setShowNfcPopup(true)}
+        >
+          <Text style={styles.collectBtnText}>수거하기</Text>
+        </TouchableOpacity>
+      </View>
+      
       {/* 월별 수거내역 */}
       <View style={styles.listBox}>
         <View style={{ alignItems: "center", marginBottom: 8 }}>
@@ -579,5 +630,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     letterSpacing: 1,
+  },
+    collectBtn: {
+    backgroundColor: "#2DA25A",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  collectBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
 });
