@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const petIcon = require('../../assets/images/pet_icon.png');
 const arrowLeft = require('../../assets/images/arrow_left.png');
 
-const BASE_URL = "http://172.30.1.66:8080"; // 
+const BASE_URL = "http://172.18.38.26:8080"; // 
 
 // 시간 포맷 함수
 const formatDate = (dateString) => {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/devices")
 @RequiredArgsConstructor
@@ -51,5 +52,29 @@ public class DeviceController {
                 )))
                 .orElse(ResponseEntity.notFound().build()); 
     }
+
+    // 수거 완료 시 적재율(%) 0으로 초기화
+    @PostMapping("/reset-load")
+    public ResponseEntity<String> resetLoadRate(
+            @RequestParam Long deviceId,
+            @RequestParam Long adminId) {
+
+        Optional<Device> optionalDevice = deviceRepository.findById(deviceId);
+        if (optionalDevice.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Device not found");
+        }
+
+        Device device = optionalDevice.get();
+        device.setCapacity(0); // ✅ 적재율 0으로 설정
+        device.setLastUpdate(LocalDateTime.now());
+        deviceRepository.save(device);
+
+        // TODO: 필요 시 로그 테이블에도 저장 가능 (ex: device_check_logs)
+        System.out.println("✅ 수거 완료: deviceId=" + deviceId + ", adminId=" + adminId);
+
+        return ResponseEntity.ok("Load rate reset to 0%");
+    }
+
+
 }
     

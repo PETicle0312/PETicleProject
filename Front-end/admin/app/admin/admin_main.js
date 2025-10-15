@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 
-const BASE_URL = "http://172.30.1.66:8080";
+const BASE_URL = "http://172.18.38.26:8080";
 
 export const options = {
   headerShown: false,
@@ -80,12 +80,6 @@ export default function AdminMainScreen() {
   const onPrivacy = () => router.push("/admin/admin_privacy");
   const onAlarm = () => router.push("/admin/alarm");
 
-  useEffect(() => {
-  const interval = setInterval(() => {
-    fetchSchools();
-  }, 5000);
-  return () => clearInterval(interval);
-  }, [fetchSchools]);
 
   return (
     <View style={styles.container}>
@@ -131,7 +125,7 @@ export default function AdminMainScreen() {
         </View>
         <View style={styles.tableRow}>
           <View style={{ flex: 1.5 }}>
-            <Text style={styles.levelDesc}>적정 범위 내 (0%~40%)</Text>
+            <Text style={styles.levelDesc}>적정 범위 내 (0%~49%)</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.levelDesc}>적재 기준에 맞게 채워짐</Text>
@@ -144,7 +138,7 @@ export default function AdminMainScreen() {
         <View style={styles.tableRow}>
           <View style={{ flex: 1.5 }}>
             <Text style={styles.levelDesc}>
-              기준보다 다소 초과 (예: 50%~70%)
+              기준보다 다소 초과 (예: 50%~79%)
             </Text>
           </View>
           <View style={{ flex: 1 }}>
@@ -211,14 +205,14 @@ export default function AdminMainScreen() {
                   style={[
                     item.loadRate >= 80
                       ? styles.statusRed
-                      : item.loadRate >= 40
+                      : item.loadRate >= 50
                       ? styles.statusYellow
                       : styles.statusGreen,
                   ]}
                 >
                   {item.loadRate >= 80
                     ? "수거필요"
-                    : item.loadRate >= 40
+                    : item.loadRate >= 50
                     ? "주의"
                     : "양호"}
                 </Text>
@@ -227,7 +221,7 @@ export default function AdminMainScreen() {
                 style={[
                   item.loadRate >= 80
                     ? styles.statusRed
-                    : item.loadRate >= 40
+                    : item.loadRate >= 50
                     ? styles.statusYellow
                     : styles.statusGreen,
                 ]}

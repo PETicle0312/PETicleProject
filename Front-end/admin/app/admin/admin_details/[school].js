@@ -77,7 +77,7 @@ export default function AdminDetailScreen() {
   const fetchLogs = async () => {
     try {
       const response = await axios.get(
-        `http://172.30.1.66:8080/api/device-logs/${deviceId}`,
+        `http://172.18.38.26:8080/api/device-logs/${deviceId}`,
         { params: { yearMonth: toYearMonth(selectedMonth) } }
       );
 
@@ -147,28 +147,27 @@ export default function AdminDetailScreen() {
 
   // ===== 수거율 아이콘 =====
   const getLevelIcon = () => {
-    if (percent === 0) return require("../../../assets/images/levelEmpty_icon.png");
-    if (percent > 0 && percent <= 40) return require("../../../assets/images/levelGood_icon.png");
-    if (percent >= 50 && percent <= 70) return require("../../../assets/images/levelWarn_icon.png");
-    if (percent >= 80) return require("../../../assets/images/levelDanger_icon.png");
-    return require("../../../assets/images/levelEmpty_icon.png");
+    const p = Number(percent);
+    if (p === 0) return require("../../../assets/images/levelEmpty_icon.png");
+    if (p < 50)  return require("../../../assets/images/levelGood_icon.png");
+    if (p < 80)  return require("../../../assets/images/levelWarn_icon.png");
+    return require("../../../assets/images/levelDanger_icon.png");
   };
 
-    // ✅ 수거 완료 처리 함수
+  // ✅ 기존의 alert() 삭제하고, 새 state 추가
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // ✅ 수거 완료 함수 수정
   const handleConfirmCollection = async () => {
     try {
-      const adminId = await AsyncStorage.getItem("adminId"); // 로그인 관리자 ID 가져오기
-
-      await axios.post("http://172.30.1.66:8080/api/device/reset-load", null, {
-        params: {
-          deviceId: deviceId,
-          adminId: adminId || "unknown",
-        },
+      const adminId = await AsyncStorage.getItem("adminId");
+      await axios.post("http://172.18.38.26:8080/api/devices/reset-load", null, {
+        params: { deviceId, adminId: adminId || "unknown" },
       });
 
-      alert("✅ 수거 완료! 적재율이 0%로 초기화되었습니다.");
-      setPercent(0); // UI 즉시 갱신
-      setShowNfcPopup(false); // 팝업 닫기
+      setPercent(0);
+      setShowNfcPopup(false);
+      setShowSuccessPopup(true); // ✅ 새 팝업 띄우기
     } catch (err) {
       console.error("❌ 수거 완료 실패:", err);
       alert("⚠️ 수거 완료 처리 중 오류가 발생했습니다.");
@@ -179,9 +178,10 @@ export default function AdminDetailScreen() {
   useEffect(() => {
     const fetchPercent = async () => {
       try {
-        const res = await axios.get(`http://172.30.1.66:8080/api/device-status/${deviceId}`);
-        if (res.data && typeof res.data.percent === "number") {
-          setPercent(res.data.percent);
+        const res = await axios.get(`http://172.18.38.26:8080/api/devices/${deviceId}/status`);
+        const value = Number(res?.data?.capacity);
+        if (!Number.isNaN(value)) {
+          setPercent(value);
         }
       } catch (e) {
         console.error("❌ 적재율 불러오기 실패:", e);
@@ -276,17 +276,23 @@ export default function AdminDetailScreen() {
                 styles.arcAlert,
                 {
                   color:
-                    percent === 0
+                    Number(percent) === 0
                       ? "#bbb"
-                      : percent <= 40
+                      : Number(percent) < 50
                       ? "#2DA25A"
-                      : percent <= 70
+                      : Number(percent) < 80
                       ? "#F3B32F"
                       : "#E94234",
                 },
               ]}
             >
-              {percent === 0 ? "비어있음" : percent <= 40 ? "양호" : percent <= 70 ? "주의" : "수거필요"}
+              {Number(percent) === 0
+                ? "비어있음"
+                : Number(percent) < 50
+                ? "양호"
+                : Number(percent) < 80
+                ? "주의"
+                : "수거필요"}
             </Text>
           </View>
         </View>
@@ -296,12 +302,32 @@ export default function AdminDetailScreen() {
         {/* 수거하기 버튼 */}
         <TouchableOpacity
           style={styles.collectBtn}
-          onPress={() => setShowNfcPopup(true)}
+          onPress={() => setShowNfcPopup(true)}  // ✅ 팝업만 띄움
         >
           <Text style={styles.collectBtnText}>수거하기</Text>
         </TouchableOpacity>
       </View>
       
+      {/* ✅ 수거 완료 커스텀 팝업 */}
+      <Modal visible={showSuccessPopup} transparent animationType="fade">
+        <View style={styles.popupBackground}>
+          <View style={styles.popupBox}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "#1B854D", marginBottom: 10 }}>
+              수거 완료!
+            </Text>
+            <Text style={{ color: "#333", fontSize: 14, marginBottom: 20 }}>
+              적재율이 0%로 초기화되었습니다.
+            </Text>
+            <TouchableOpacity
+              style={[styles.successConfirmBtn, { width: 100 }]}
+              onPress={() => setShowSuccessPopup(false)}
+            >
+              <Text style={styles.successConfirmText}>확인</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* 월별 수거내역 */}
       <View style={styles.listBox}>
         <View style={{ alignItems: "center", marginBottom: 8 }}>
@@ -630,6 +656,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     letterSpacing: 1,
+  },
+  successConfirmBtn: {
+    backgroundColor: "#209356",
+    borderRadius: 7,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginRight: 4,
+  },
+    successConfirmText: {
+    color: "#F4F4F4",       // 초록색 글씨
+    fontWeight: "bold",
+    fontSize: 16,
+    letterSpacing: 0.5,
+    textAlign: "center",
   },
     collectBtn: {
     backgroundColor: "#2DA25A",
