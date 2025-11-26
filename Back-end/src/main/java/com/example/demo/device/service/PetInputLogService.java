@@ -1,4 +1,5 @@
 package com.example.demo.device.service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.common.sse.LivesSseManager;     
 import com.example.demo.user.dto.LivesDto; 
@@ -28,12 +29,20 @@ public class PetInputLogService {
 
     private final LivesSseManager sse;
 
+    @Transactional
     public String saveInputLog(PetInputLogDto dto) {
-        String userId = dto.getUserId();
-        User user = userRepository.findByStudentNumber(dto.getStudentNumber()).orElse(null);
-        if (user == null) {
-            return "존재하지 않는 학번입니다";
-        }
+        // 1. user는 찾되, 없어도 그냥 null 허용
+    User user = null;
+    if (dto.getStudentNumber() != null && !dto.getStudentNumber().isBlank()) {
+        user = userRepository.findByStudentNumber(dto.getStudentNumber()).orElse(null);
+    }
+
+    // public String saveInputLog(PetInputLogDto dto) {
+    //     String userId = dto.getUserId();
+    //     User user = userRepository.findByStudentNumber(dto.getStudentNumber()).orElse(null);
+    //     // if (user == null) {
+    //     //     return "존재하지 않는 학번입니다";
+    //     // }
 
         Device device = deviceRepository.findById(dto.getDeviceId()).orElse(null);
         if (device == null) {
@@ -44,37 +53,43 @@ public class PetInputLogService {
             return "정상 PET이 아니므로 저장하지 않음";
         }
         
+        // 4. user가 있을 때만 school 가져오기 (null-safe)
+        var school = device.getSchool();
+
         // 로그 객체 생성
         PetInputLog log = PetInputLog.builder()
                 .userId(user)
-                .school(user.getSchool())
+                .school(school)//.school(user.getSchool())
                 .device(device)
+                .studentNumber(dto.getStudentNumber())
                 .inputCount(dto.getInputCount())
                 .inputTime(dto.getInputTime() != null ? dto.getInputTime() : LocalDateTime.now())
                 .build();
 
         petInputLogRepository.save(log);
 //-----------------------------실시간 목숨반영 수정 로직---------------------------        
-    // 목숨 증가
-    int currentLives = user.getTotalLives();
-    user.setTotalLives(currentLives + dto.getInputCount());
-    userRepository.save(user);
+    if (user != null) { // 회원일 때만 실행
+        // 목숨 증가
+        int currentLives = user.getTotalLives();
+        user.setTotalLives(currentLives + dto.getInputCount());
+        userRepository.save(user);
 
-    // 누적 투입량 합계 (SUM이 null일 수 있어 0 보정)
-    Integer total = petInputLogRepository.getTotalCountByUserId(user.getUserId());
-    int totalRecycleCount = (total != null) ? total : 0;
+        // 누적 투입량 합계 (SUM이 null일 수 있어 0 보정)
+        Integer total = petInputLogRepository.getTotalCountByUserId(user.getUserId());
+        int totalRecycleCount = (total != null) ? total : 0;
 
-    // ✅ SSE로 실시간 푸시 (userId는 String 기준)
-    sse.publishLives(
-    user.getUserId(),
-    new LivesDto(
+        // ✅ SSE로 실시간 푸시 (userId는 String 기준)
+        sse.publishLives(
         user.getUserId(),
-        user.getTotalLives(),
-        totalRecycleCount,
-        LocalDateTime.now(),
-        dto.getInputCount() )
-         // LivesDto(userId, totalLives, totalRecycleCount)
-);
+        new LivesDto(
+            user.getUserId(),
+            user.getTotalLives(),
+            totalRecycleCount,
+            LocalDateTime.now(),
+            dto.getInputCount() )
+            // LivesDto(userId, totalLives, totalRecycleCount)
+        );
+    }
 //-----------------------------------------------------------------------------------
         return "success";
     }
@@ -101,16 +116,3 @@ public class PetInputLogService {
         }).collect(Collectors.toList());
     }
 }
-// public List<PetInputLogDto> getLogsByUserId(String userId) {
-// long start = System.currentTimeMillis();
-
-// List<PetInputLog> logs = petInputLogRepository.findByUserId(userId);
-
-// long end = System.currentTimeMillis();
-// System.out.println("⏱ 쿼리 시간(ms): " + (end - start));
-
-// // DTO로 변환
-// return logs.stream()
-// .map(log -> new PetInputLogDto(log)) // 예시
-// .collect(Collectors.toList());
-// }

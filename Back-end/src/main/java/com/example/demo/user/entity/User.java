@@ -48,7 +48,7 @@ public class User {
     @Column(name = "total_lives")
     private int totalLives;
 
-    @Column(name = "student_number", nullable = false)
+    @Column(name = "student_number", nullable = true)
     private String studentNumber;
 
     @ManyToOne

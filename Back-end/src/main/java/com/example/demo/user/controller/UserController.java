@@ -80,15 +80,21 @@ public class UserController {
     }
 
     // ===== 학번 존재 여부 확인 =====
+    // @GetMapping("/check-student")
+    // public ResponseEntity<String> checkStudent(@RequestParam String studentNumber) {
+    //     boolean exists = userRepository.findByStudentNumber(studentNumber).isPresent();
+    //     if (exists) {
+    //         return ResponseEntity.ok("존재하는 학번입니다");
+    //     } else {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 학번입니다");
+    //     }
+    // }
+
+    //=======학번 인증 없이 저장======
     @GetMapping("/check-student")
-    public ResponseEntity<String> checkStudent(@RequestParam String studentNumber) {
-        boolean exists = userRepository.findByStudentNumber(studentNumber).isPresent();
-        if (exists) {
-            return ResponseEntity.ok("존재하는 학번입니다");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 학번입니다");
-        }
-    }
+public ResponseEntity<String> checkStudent(@RequestParam String studentNumber) {
+    return ResponseEntity.ok("재활용을 시작합니다");
+}
 
     // ===== 현재 하트 조회 =====
     @GetMapping("/lives")
